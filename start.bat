@@ -3,7 +3,7 @@ setlocal
 cd /d "%~dp0"
 
 echo Starting BgUtil PO Token Provider Server...
-cd bgutil-ytdlp-pot-provider\server
+cd third_party\bgutil-ytdlp-pot-provider\server
 set SERVER_DIR=%CD%
 cd /d "%~dp0"
 

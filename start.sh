@@ -1,10 +1,10 @@
 #!/bin/bash
 
 echo "Starting BgUtil PO Token Provider Server..."
-cd bgutil-ytdlp-pot-provider/server
+cd third_party/bgutil-ytdlp-pot-provider/server
 node build/main.js &
 PO_PROVIDER_PID=$!
-cd ../..
+cd ../../..
 
 echo "PO Token Provider started (PID: $PO_PROVIDER_PID)"
 echo "Waiting 5 seconds for provider to initialize..."

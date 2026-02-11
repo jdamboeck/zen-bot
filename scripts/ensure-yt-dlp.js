@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Ensures yt-dlp is available: if not in PATH, downloads the appropriate
- * binary for the OS to the project root.
+ * binary for the OS to third_party/yt-dlp/.
  * Linux: https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
  * Windows: https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
  */
@@ -11,9 +11,10 @@ const fs = require("fs");
 const path = require("path");
 
 const projectRoot = path.join(__dirname, "..");
+const ytDlpDir = path.join(projectRoot, "third_party", "yt-dlp");
 const isWin = process.platform === "win32";
 const binaryName = isWin ? "yt-dlp.exe" : "yt-dlp";
-const destPath = path.join(projectRoot, binaryName);
+const destPath = path.join(ytDlpDir, binaryName);
 
 const DOWNLOAD_URLS = {
 	linux: "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp",
@@ -64,8 +65,9 @@ async function main() {
 		console.log("yt-dlp found at", destPath, ", skipping download.");
 		return;
 	}
-	console.log("yt-dlp not in PATH or project root. Downloading to", destPath, "...");
+	console.log("yt-dlp not in PATH or third_party/yt-dlp. Downloading to", destPath, "...");
 	try {
+		fs.mkdirSync(ytDlpDir, { recursive: true });
 		await download(url);
 		if (!isWin) fs.chmodSync(destPath, 0o755);
 		console.log("Downloaded yt-dlp to", destPath);

@@ -35,7 +35,7 @@ Built with a feature-based architecture that keeps things simple: **automatism o
 - **Node.js** 18+
 - **FFmpeg** (used by discord-player for audio)
 - **Discord bot token** ([Discord Developer Portal](https://discord.com/developers/applications))
-- **yt-dlp**: installed on your system or downloaded automatically by postinstall
+- **yt-dlp**: installed on your system or downloaded automatically by postinstall to `third_party/yt-dlp/`
 
 ## Installation
 
@@ -162,8 +162,8 @@ Deploy using the included `captain-definition`. Set `BOT_TOKEN` in the app's env
 - **discord-player** handles queues and audio
 - **yt-dlp** resolves and streams media via a custom extractor
 - **PO token provider** ([bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-pot-provider)) provides proof-of-origin tokens to avoid YouTube 403 errors
-- **yt-dlp path resolution**: system PATH → project-root binary (downloaded by postinstall)
-- **yt-dlp plugins** load from `yt-dlp-plugins/` directory
+- **yt-dlp path resolution**: system PATH → `third_party/yt-dlp/` binary (downloaded by postinstall)
+- **yt-dlp plugins** load from `third_party/yt-dlp/yt-dlp-plugins/`; the extractor passes this dir via `--plugin-dirs` so it works with both system and local yt-dlp
 
 ### Postinstall Scripts
 
@@ -177,7 +177,7 @@ When you run `npm install`:
 | Problem | Solution |
 |---------|----------|
 | Missing or invalid env.json | Set `BOT_TOKEN` env var or create `env.json` |
-| EACCES on yt-dlp | Run `chmod +x yt-dlp` or install yt-dlp system-wide |
+| EACCES on yt-dlp | Run `chmod +x third_party/yt-dlp/yt-dlp` or install yt-dlp system-wide |
 | 403 from YouTube | Ensure PO token provider is running (`start:full`) |
 | No audio | Ensure FFmpeg is installed and on PATH |
 | Plugin not loading | Re-run `npm install` to rebuild plugins |

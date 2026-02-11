@@ -51,7 +51,7 @@ The custom `YtDlpExtractor` in `zen-bot/music/extractor.js`:
 
 - Checks if URL is a YouTube URL
 - Fetches PO token for YouTube requests
-- Passes token to yt-dlp via `--po-token` flag
+- Passes token to yt-dlp via extractor args; when using system yt-dlp, the extractor passes `--plugin-dirs` with `third_party/yt-dlp/yt-dlp-plugins` so the PO plugin is found
 
 ## Configuration
 
@@ -85,7 +85,7 @@ This:
 Start the provider in one terminal:
 
 ```bash
-cd bgutil-ytdlp-pot-provider/server
+cd third_party/bgutil-ytdlp-pot-provider/server
 node build/main.js
 ```
 
@@ -116,7 +116,7 @@ To use a different port:
 Check if dependencies are installed:
 
 ```bash
-cd bgutil-ytdlp-pot-provider/server
+cd third_party/bgutil-ytdlp-pot-provider/server
 npm install
 npx tsc
 ```
@@ -148,7 +148,7 @@ Look for `[po-token]` log entries.
 1. zen-bot receives play request for YouTube URL
 2. Extractor calls `fetchPoToken()`
 3. Cache returns existing token or fetches new one
-4. Token is passed to yt-dlp as `--po-token` argument
+4. Token is passed to yt-dlp via extractor (plugin dir `third_party/yt-dlp/yt-dlp-plugins` is passed as `--plugin-dirs` when using system yt-dlp)
 5. yt-dlp includes token in YouTube API requests
 6. YouTube accepts request as "legitimate"
 

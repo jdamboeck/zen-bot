@@ -2,6 +2,7 @@ FROM node:20-bookworm-slim
 
 # Runtime deps + build deps for canvas (PO provider server); Debian/glibc avoids Alpine/musl canvas build issues
 # python3-pip + yt-dlp[default] for YouTube EJS (JS runtime) support; path resolution prefers system yt-dlp
+# npm install runs ensure scripts and populates third_party/yt-dlp/yt-dlp-plugins/ for PO token plugin
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     git ffmpeg python3 python3-pip \
