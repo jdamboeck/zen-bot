@@ -4,6 +4,7 @@
 
 const { ActivityType } = require("discord-api-types/v10");
 const { createLogger } = require("../logger");
+const url = require("../utils/url");
 
 const log = createLogger("activity");
 const MAX_ACTIVITY_LEN = 128;
@@ -63,19 +64,8 @@ async function setVoiceChannelStatus(client, voiceChannel, status) {
 	}
 }
 
-/**
- * Check if a URL is a YouTube URL.
- * @param {string} url
- * @returns {boolean}
- */
-function isYouTubeUrl(url) {
-	if (!url || typeof url !== "string") return false;
-	try {
-		const u = new URL(url);
-		return u.hostname === "youtube.com" || u.hostname === "www.youtube.com" || u.hostname === "youtu.be";
-	} catch {
-		return false;
-	}
+function isYouTubeUrl(u) {
+	return url.isYouTubeUrl(u);
 }
 
 module.exports = {
