@@ -15,6 +15,7 @@ const {
 	ButtonStyle,
 } = require("discord.js");
 const { createLogger } = require("../../core/logger");
+const url = require("../../core/utils/url");
 const playButtonStore = require("../playButtonStore");
 
 const log = createLogger("musicstats");
@@ -34,38 +35,6 @@ const BUTTON_TITLE_LENGTH = 50;
 function truncateTitle(title, maxLength) {
 	if (title.length <= maxLength) return title;
 	return title.slice(0, maxLength - 3) + "...";
-}
-
-/**
- * Extract YouTube video ID from URL.
- * @param {string} url - YouTube URL
- * @returns {string|null} Video ID or null
- */
-function extractYouTubeVideoId(url) {
-	if (!url) return null;
-	try {
-		const urlObj = new URL(url);
-		if (urlObj.hostname === "youtu.be") {
-			return urlObj.pathname.slice(1);
-		}
-		if (urlObj.hostname === "youtube.com" || urlObj.hostname === "www.youtube.com") {
-			return urlObj.searchParams.get("v");
-		}
-	} catch {
-		return null;
-	}
-	return null;
-}
-
-/**
- * Get YouTube thumbnail URL from video URL.
- * @param {string} videoUrl - YouTube video URL
- * @returns {string|null} Thumbnail URL or null
- */
-function getYouTubeThumbnailUrl(videoUrl) {
-	const videoId = extractYouTubeVideoId(videoUrl);
-	if (!videoId) return null;
-	return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 }
 
 /**
@@ -187,7 +156,7 @@ module.exports = {
 			container.addTextDisplayComponents((textDisplay) => textDisplay.setContent("**Last played Video**"));
 
 			if (lastPlayed && lastPlayed.video_title) {
-				const thumbnailUrl = getYouTubeThumbnailUrl(lastPlayed.video_url);
+				const thumbnailUrl = url.getYouTubeThumbnailUrl(lastPlayed.video_url);
 				// Truncate title to ensure it fits within Discord limits
 				const title = truncateTitle(lastPlayed.video_title || "Unknown Title", 200);
 				// Ensure title is not empty

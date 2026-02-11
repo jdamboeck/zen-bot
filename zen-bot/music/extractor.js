@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const { BaseExtractor } = require("discord-player");
 const { createLogger } = require("../core/logger");
+const url = require("../core/utils/url");
 const { fetchPoToken, PoTokenCache } = require("./po-token");
 const config = require("./config");
 
@@ -54,7 +55,7 @@ class YtDlpExtractor extends BaseExtractor {
 	}
 
 	async validate(query) {
-		const isYouTube = query.includes("youtube.com") || query.includes("youtu.be");
+		const isYouTube = url.isYouTubeUrl(query);
 		const isSearchQuery = !query.startsWith("http");
 		const shouldHandle = isYouTube || isSearchQuery;
 		log.debug(`Validate "${query}": ${shouldHandle ? "YES" : "NO"} (isYT: ${isYouTube}, isSearch: ${isSearchQuery})`);
