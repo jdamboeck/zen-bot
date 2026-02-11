@@ -2,8 +2,8 @@
 # Node modules
 node_modules/
 
-# PO token provider
-bgutil-ytdlp-pot-provider/
+# Third-party (yt-dlp binary, plugins, bgutil-ytdlp-pot-provider clone)
+third_party/
 
 // Environment files
 env.json
@@ -11,11 +11,6 @@ po-provider.pid
 
 # Python cache
 **/__pycache__/**
-
-# yt-dlp executables
-yt-dlp.exe
-yt-dlp
-yt-dlp-plugins/
 
 # Database files
 *.db

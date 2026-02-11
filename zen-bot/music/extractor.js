@@ -17,7 +17,8 @@ const config = require("./config");
 const log = createLogger("yt-dlp");
 
 const projectRoot = path.join(__dirname, "..", "..");
-const localBinary = path.join(projectRoot, process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+const localBinary = path.join(projectRoot, "third_party", "yt-dlp", process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+const projectPluginDir = path.join(projectRoot, "third_party", "yt-dlp", "yt-dlp-plugins");
 
 /**
  * Resolve yt-dlp binary: prefer system PATH, then project-local binary.
@@ -47,6 +48,15 @@ function getYtDlpPath() {
  */
 function getJsRuntimeArgs() {
 	return ["--js-runtimes", `node:${process.execPath}`];
+}
+
+/**
+ * yt-dlp args so the project plugin dir is searched (required when using system yt-dlp).
+ *
+ * @returns {string[]}
+ */
+function getPluginDirArgs() {
+	return ["--plugin-dirs", projectPluginDir];
 }
 
 const YTDLP_PATH = getYtDlpPath();
@@ -93,6 +103,7 @@ class YtDlpExtractor extends BaseExtractor {
 		return new Promise((resolve) => {
 			const isUrl = query.startsWith("http");
 			const args = [
+				...getPluginDirArgs(),
 				...getJsRuntimeArgs(),
 				"--dump-json",
 				"--flat-playlist",
@@ -157,6 +168,7 @@ class YtDlpExtractor extends BaseExtractor {
 		}
 
 		const args = [
+			...getPluginDirArgs(),
 			...getJsRuntimeArgs(),
 			"-o", "-", "-f", "bestaudio", "--no-playlist",
 		];
