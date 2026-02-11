@@ -1,11 +1,14 @@
 /**
- * URL utilities — YouTube detection, video ID extraction, thumbnail URL.
+ * URL utilities — YouTube URL detection, video ID extraction, and thumbnail URL.
+ *
+ * @module zen-bot/core/utils/url
  */
 
 /**
- * Check if a URL is a YouTube URL.
- * @param {string} url - Any string (URL or not).
- * @returns {boolean} True only if url parses as a URL whose hostname is youtube.com, www.youtube.com, or youtu.be.
+ * Check if a string is a YouTube URL (youtube.com, www.youtube.com, youtu.be).
+ *
+ * @param {string} url - String to check (any string; non-URLs return false).
+ * @returns {boolean}
  */
 function isYouTubeUrl(url) {
 	if (!url || typeof url !== "string") return false;
@@ -18,9 +21,10 @@ function isYouTubeUrl(url) {
 }
 
 /**
- * Get video ID from a YouTube URL.
- * @param {string} url - YouTube (or any) URL.
- * @returns {string|null} Video ID or null if not YouTube, invalid URL, or missing/empty ID.
+ * Extract video ID from a YouTube URL (youtube.com?v=ID or youtu.be/ID).
+ *
+ * @param {string} url - Full URL or any string.
+ * @returns {string|null} Video ID or null if not YouTube or no ID.
  */
 function getYouTubeVideoId(url) {
 	if (!url || typeof url !== "string") return null;
@@ -41,9 +45,10 @@ function getYouTubeVideoId(url) {
 }
 
 /**
- * Get YouTube thumbnail URL (maxresdefault) from a video URL or raw video ID.
- * @param {string} videoUrlOrId - Full YouTube video URL or a raw video ID.
- * @returns {string|null} Thumbnail URL or null if no valid video ID.
+ * Build YouTube maxresdefault thumbnail URL from a video URL or video ID.
+ *
+ * @param {string} videoUrlOrId - Full YouTube URL or raw video ID.
+ * @returns {string|null} Thumbnail URL or null if no valid ID.
  */
 function getYouTubeThumbnailUrl(videoUrlOrId) {
 	const id = getYouTubeVideoId(videoUrlOrId) ?? (typeof videoUrlOrId === "string" && videoUrlOrId.trim() || null);

@@ -1,5 +1,7 @@
 /**
- * Stop command - stops playback and clears the queue.
+ * Stop command — deletes the queue, leaves voice, and clears bot activity/voice status.
+ *
+ * @module zen-bot/music/commands/stop
  */
 
 const { useQueue } = require("discord-player");
@@ -10,6 +12,12 @@ const log = createLogger("stop");
 module.exports = {
 	name: "stop",
 
+	/**
+	 * @param {import("discord.js").Message} message
+	 * @param {string[]} args
+	 * @param {object} ctx - Shared context (services.activity)
+	 * @returns {Promise<import("discord.js").Message>}
+	 */
 	async execute(message, args, ctx) {
 		const queue = useQueue(message.guild.id);
 		if (!queue) {

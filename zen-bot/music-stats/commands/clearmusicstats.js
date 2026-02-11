@@ -1,5 +1,8 @@
 /**
- * Clear music stats command - clears all play history for a guild.
+ * Clearmusicstats command — deletes all play history for the current guild.
+ * Requires Administrator. Does not clear track comments/reactions (use clearcomments).
+ *
+ * @module zen-bot/music-stats/commands/clearmusicstats
  */
 
 const { createLogger } = require("../../core/logger");
@@ -10,8 +13,14 @@ module.exports = {
 	name: "clearmusicstats",
 	permissions: ["Administrator"],
 
+	/**
+	 * @param {import("discord.js").Message} message
+	 * @param {string[]} args
+	 * @param {object} ctx - Shared context (ctx.db.music)
+	 * @returns {Promise<import("discord.js").Message>}
+	 */
 	async execute(message, args, ctx) {
-		// Check if user has administrator permission
+		// Require Administrator
 		if (!message.member.permissions.has("Administrator")) {
 			log.debug("Clearmusicstats refused: user lacks Administrator (guild:", message.guild.id, ")");
 			return message.reply("🛑 You need the 'Administrator' permission to use this command.");

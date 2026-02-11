@@ -1,5 +1,9 @@
 /**
- * Command loader - scans feature directories for commands.
+ * Command loader — discovers commands from all feature directories.
+ * Each file in zen-bot/[feature]/commands/*.js exporting { name, execute } is registered;
+ * aliases are supported via command.aliases.
+ *
+ * @module zen-bot/core/commands
  */
 
 const fs = require("fs");
@@ -9,9 +13,10 @@ const { createLogger } = require("../logger");
 const log = createLogger("commands");
 
 /**
- * Load all commands from feature directories.
- * Scans zen-bot/[feature]/commands/[command].js for command files.
- * @returns {Map<string, object>} Map of command name to command object
+ * Load all commands from zen-bot feature directories.
+ * Skips index.js and files missing name or execute.
+ *
+ * @returns {Map<string, { name: string, execute: Function, aliases?: string[], permissions?: string[] }>}
  */
 function loadCommands() {
 	const commands = new Map();

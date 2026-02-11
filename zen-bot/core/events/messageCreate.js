@@ -1,5 +1,8 @@
 /**
- * Message create event handler - routes prefix commands.
+ * messageCreate handler — dispatches prefix commands from core command registry.
+ * Ignores bots; only messages starting with config.prefix are parsed as commands.
+ *
+ * @module zen-bot/core/events/messageCreate
  */
 
 const { createLogger } = require("../logger");
@@ -12,10 +15,11 @@ module.exports = {
 	target: "client",
 
 	/**
-	 * Handle message create event - dispatch prefix commands.
+	 * Parse prefix, resolve command, and execute. Other handlers (e.g. music-comments) still run.
+	 *
 	 * @param {import("discord.js").Message} message
-	 * @param {object} ctx - Shared context
-	 * @returns {boolean} True if message was handled as a command
+	 * @param {object} ctx - Shared context (commands, config, etc.)
+	 * @returns {Promise<boolean>} True if a command was found and executed
 	 */
 	async handle(message, ctx) {
 		// Ignore bot messages

@@ -1,21 +1,24 @@
 /**
- * Soundboard playback helper.
+ * Soundboard helper — plays the guild's first soundboard sound when a track starts.
+ * Used by music playerStart to show the soundboard icon briefly before track info.
+ *
+ * @module zen-bot/core/services/soundboard
  */
 
 const { createLogger } = require("../logger");
 
 const log = createLogger("soundboard");
 
-/**
- * Duration to show the soundboard icon before switching to track info.
- */
+/** How long to show the soundboard icon (ms) before switching to "now playing" text. */
 const SOUNDBOARD_ICON_DURATION_MS = 2000;
 
 /**
- * Play the server's first soundboard sound (slot 1) in the voice channel.
- * Uses Discord's native soundboard API.
+ * Play the guild's first soundboard sound in the given voice channel.
+ * No-op if guild/channel lack soundboard support or no custom sounds exist.
+ *
  * @param {import("discord.js").Guild} guild
  * @param {import("discord.js").VoiceChannel} voiceChannel
+ * @returns {Promise<void>}
  */
 async function tryPlaySoundboardSlot1(guild, voiceChannel) {
 	const hasGuild = !!guild?.soundboardSounds;

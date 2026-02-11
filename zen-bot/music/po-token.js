@@ -1,5 +1,8 @@
 /**
- * PO Token provider for YouTube authentication.
+ * PO token provider — fetches and caches YouTube PO tokens from an HTTP service.
+ * Used by the yt-dlp extractor when streaming to improve reliability.
+ *
+ * @module zen-bot/music/po-token
  */
 
 const http = require("http");
@@ -9,9 +12,10 @@ const config = require("./config");
 const log = createLogger("po-token");
 
 /**
- * Fetches a PO token from the bgutil provider HTTP server.
- * @param {string} contentBinding - Optional content binding
- * @returns {Promise<string|null>} The PO token or null if failed
+ * Fetch a PO token from the configured provider (POST /get_pot). Retries on failure.
+ *
+ * @param {string|null} [contentBinding=null] - Optional content binding for the provider
+ * @returns {Promise<string|null>} Token string or null
  */
 async function fetchPoToken(contentBinding = null) {
 	const { poTokenUrl, poTokenRetries, poTokenRetryDelay } = config;
@@ -105,14 +109,22 @@ async function fetchPoToken(contentBinding = null) {
 }
 
 /**
- * Cache for PO tokens with expiry.
+ * In-memory cache for PO tokens with a TTL. Entries expire after ttlHours.
  */
 class PoTokenCache {
+	/**
+	 * @param {number} [ttlHours] - Hours until cached token is considered expired (default from config)
+	 */
 	constructor(ttlHours = config.poTokenTtlHours) {
+		/** @type {Map<string, { value: string, expiry: number }>} */
 		this.cache = new Map();
 		this.ttl = ttlHours * 60 * 60 * 1000;
 	}
 
+	/**
+	 * @param {string} key
+	 * @param {string} value
+	 */
 	set(key, value) {
 		this.cache.set(key, {
 			value,
@@ -120,18 +132,21 @@ class PoTokenCache {
 		});
 	}
 
+	/**
+	 * @param {string} key
+	 * @returns {string|null}
+	 */
 	get(key) {
 		const cached = this.cache.get(key);
 		if (!cached) return null;
-
 		if (Date.now() > cached.expiry) {
 			this.cache.delete(key);
 			return null;
 		}
-
 		return cached.value;
 	}
 
+	/** Clear all cached tokens. */
 	clear() {
 		this.cache.clear();
 	}

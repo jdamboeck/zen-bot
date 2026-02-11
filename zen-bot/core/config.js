@@ -1,8 +1,10 @@
 /**
- * Core configuration - defaults with env overrides.
+ * Core configuration — bot token and command prefix.
+ * Loads from environment variables first, then falls back to env.json.
+ *
+ * @module zen-bot/core/config
  */
 
-// Load bot token from environment or config file
 let botToken = process.env.BOT_TOKEN;
 if (!botToken) {
 	try {
@@ -20,7 +22,9 @@ if (!botToken) {
 	process.exit(1);
 }
 
+/** @type {{ botToken: string, prefix: string }} */
 module.exports = {
 	botToken,
+	/** Command prefix (e.g. "#"). Override with PREFIX env. */
 	prefix: process.env.PREFIX || "#",
 };

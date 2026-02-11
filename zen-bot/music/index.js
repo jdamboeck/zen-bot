@@ -1,5 +1,8 @@
 /**
- * Music feature - Player initialization and extractor registration.
+ * Music feature — discord-player setup, yt-dlp extractor, and music config.
+ * Provides ctx.player and ctx.musicConfig; play/pause/resume/stop commands live in music/commands.
+ *
+ * @module zen-bot/music
  */
 
 const { Player } = require("discord-player");
@@ -11,8 +14,10 @@ const config = require("./config");
 const log = createLogger("music");
 
 /**
- * Initialize the music feature.
- * @param {object} ctx - Shared context object
+ * Create player, register YtDlpExtractor and default extractors, attach musicConfig to ctx.
+ *
+ * @param {object} ctx - Shared context (mutated: player, musicConfig)
+ * @returns {Promise<void>}
  */
 async function init(ctx) {
 	log.info("Initializing music...");

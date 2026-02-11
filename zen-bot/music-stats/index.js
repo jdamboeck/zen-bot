@@ -1,10 +1,8 @@
 /**
- * Music stats feature - Database namespace for play tracking and comments.
+ * Music-stats feature — registers ctx.db.music with play history, track comments, and reactions.
+ * Other features (music-comments, music-stats commands) use ctx.db.music to read/write.
  *
- * This feature registers the 'music' namespace on ctx.db, providing
- * database operations for music playback history and track comments.
- *
- * Access: ctx.db.music.[method]
+ * @module zen-bot/music-stats
  */
 
 const { createLogger } = require("../core/logger");
@@ -13,8 +11,10 @@ const { initMusicDatabase } = require("./database");
 const log = createLogger("music-stats");
 
 /**
- * Initialize the music-stats feature.
- * @param {object} ctx - Shared context object
+ * Register the "music" database namespace so ctx.db.music is available.
+ *
+ * @param {object} ctx - Shared context (ctx.db.register)
+ * @returns {Promise<void>}
  */
 async function init(ctx) {
 	log.info("Initializing music-stats...");

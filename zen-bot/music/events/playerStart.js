@@ -1,6 +1,8 @@
 /**
- * Player start event - updates activity and plays soundboard.
- * Note: Recording plays and track comments are handled by their respective features.
+ * playerStart handler — sets bot activity and voice channel status, plays soundboard slot 1.
+ * Play recording and track comments are handled by music-stats and music-comments.
+ *
+ * @module zen-bot/music/events/playerStart
  */
 
 const { ActivityType } = require("discord-api-types/v10");
@@ -12,6 +14,13 @@ module.exports = {
 	event: "playerStart",
 	target: "player",
 
+	/**
+	 * Show music icon briefly, then "now playing" with listener count and channel.
+	 *
+	 * @param {import("discord-player").GuildQueue} queue
+	 * @param {import("discord-player").Track} track
+	 * @param {object} ctx - Shared context (services.activity, services.soundboard)
+	 */
 	async handle(queue, track, ctx) {
 		const channel = queue.channel;
 		const guild = channel?.guild;

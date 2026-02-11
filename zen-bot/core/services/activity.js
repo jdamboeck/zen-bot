@@ -1,5 +1,8 @@
 /**
- * Bot activity and voice channel status management.
+ * Bot presence and voice channel status — activity text and voice channel status line.
+ * Used by music and stop command to show "now playing" and clear when idle.
+ *
+ * @module zen-bot/core/services/activity
  */
 
 const { ActivityType } = require("discord-api-types/v10");
@@ -7,12 +10,15 @@ const { createLogger } = require("../logger");
 const url = require("../utils/url");
 
 const log = createLogger("activity");
+
+/** Max length for activity name/state (Discord limit). */
 const MAX_ACTIVITY_LEN = 128;
 
 /**
- * Truncate a string to a maximum length, appending "..." if truncated.
+ * Truncate a string to a maximum length, appending "..." if needed.
+ *
  * @param {string} str
- * @param {number} max
+ * @param {number} [max=MAX_ACTIVITY_LEN]
  * @returns {string}
  */
 function truncate(str, max = MAX_ACTIVITY_LEN) {
@@ -20,9 +26,10 @@ function truncate(str, max = MAX_ACTIVITY_LEN) {
 }
 
 /**
- * Set the bot's activity/presence.
+ * Set the bot's rich presence (activity). Clears if activityOrName is null.
+ *
  * @param {import("discord.js").Client} client
- * @param {string|object|null} activityOrName - String for simple activity, or { name, state?, type?, url? }
+ * @param {string|{ name: string, state?: string, type?: number, url?: string }|null} activityOrName - Simple string, or { name, state?, type?, url? }
  */
 function setBotActivity(client, activityOrName) {
 	if (!client.user) return;
@@ -46,11 +53,12 @@ function setBotActivity(client, activityOrName) {
 }
 
 /**
- * Set the voice channel status (the status text shown under the bot in the voice channel).
- * Uses Discord API PUT /channels/:id/voice-status. Bot must be in the channel.
+ * Set the voice channel status line (text under the bot in the voice channel).
+ * Uses Discord REST PUT /channels/:id/voice-status; bot must be in the channel.
+ *
  * @param {import("discord.js").Client} client
- * @param {import("discord.js").VoiceChannel|string} voiceChannel
- * @param {string|null} status
+ * @param {import("discord.js").VoiceChannel|string} voiceChannel - Channel or channel ID
+ * @param {string|null} status - Status text (empty string clears)
  */
 async function setVoiceChannelStatus(client, voiceChannel, status) {
 	const channelId = voiceChannel?.id ?? voiceChannel;
@@ -64,6 +72,10 @@ async function setVoiceChannelStatus(client, voiceChannel, status) {
 	}
 }
 
+/**
+ * @param {string} u - URL or string to check
+ * @returns {boolean}
+ */
 function isYouTubeUrl(u) {
 	return url.isYouTubeUrl(u);
 }

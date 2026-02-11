@@ -1,5 +1,8 @@
 /**
- * Clear comments command - clears all track comments for a guild.
+ * Clearcomments command — clears all track comments and reactions for the guild.
+ * Primary name is clearvideos; clearcomments is an alias. Requires Administrator.
+ *
+ * @module zen-bot/music-comments/commands/clearcomments
  */
 
 const { createLogger } = require("../../core/logger");
@@ -11,6 +14,12 @@ module.exports = {
 	aliases: ["clearcomments"],
 	permissions: ["Administrator"],
 
+	/**
+	 * @param {import("discord.js").Message} message
+	 * @param {string[]} args
+	 * @param {object} ctx - Shared context (ctx.db.music)
+	 * @returns {Promise<import("discord.js").Message>}
+	 */
 	async execute(message, args, ctx) {
 		if (!message.member.permissions.has("Administrator")) {
 			log.debug("Clearcomments refused: user lacks Administrator (guild:", message.guild.id, ")");

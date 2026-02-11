@@ -1,5 +1,8 @@
 /**
- * Core feature - Discord client, command registry, services, database.
+ * Core feature — Discord client, command registry, database context, and shared services.
+ * Must load first; other features depend on ctx.client, ctx.db, ctx.commands, ctx.config.
+ *
+ * @module zen-bot/core
  */
 
 const { Client, GatewayIntentBits } = require("discord.js");
@@ -13,8 +16,10 @@ const soundboard = require("./services/soundboard");
 const log = createLogger("core");
 
 /**
- * Initialize the core feature.
- * @param {object} ctx - Shared context object
+ * Create client, db context, load commands, and attach activity/soundboard to ctx.services.
+ *
+ * @param {object} ctx - Shared context (mutated: client, db, commands, config, services)
+ * @returns {Promise<void>}
  */
 async function init(ctx) {
 	log.info("Initializing core...");

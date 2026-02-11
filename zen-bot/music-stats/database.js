@@ -301,7 +301,15 @@ function initMusicDatabase(db) {
 		// ───────────────────────────────────────────────────────────────────────
 
 		/**
-		 * Save a track reaction (on enqueued message) with its timestamp.
+		 * Record a reaction on the enqueued message with its playback timestamp.
+		 *
+		 * @param {object} data
+		 * @param {string} data.videoUrl - Video URL
+		 * @param {string} data.guildId - Guild ID
+		 * @param {string} data.userId - User ID
+		 * @param {string} data.userName - User name
+		 * @param {string} data.reactionEmoji - Emoji string (e.g. "👍")
+		 * @param {number} data.timestampMs - Timestamp in ms from track start
 		 */
 		saveTrackReaction({ videoUrl, guildId, userId, userName, reactionEmoji, timestampMs }) {
 			const stmt = db.prepare(`
@@ -314,6 +322,10 @@ function initMusicDatabase(db) {
 
 		/**
 		 * Get all reactions for a track in a guild, sorted by timestamp.
+		 *
+		 * @param {string} videoUrl - Video URL
+		 * @param {string} guildId - Guild ID
+		 * @returns {Array<{ id: number, user_id: string, user_name: string, reaction_emoji: string, timestamp_ms: number, created_at: string }>}
 		 */
 		getTrackReactions(videoUrl, guildId) {
 			const stmt = db.prepare(`
@@ -326,7 +338,10 @@ function initMusicDatabase(db) {
 		},
 
 		/**
-		 * Clear all track reactions for a guild.
+		 * Delete all track reactions for a guild.
+		 *
+		 * @param {string} guildId - Guild ID
+		 * @returns {number} Number of deleted records
 		 */
 		clearTrackReactions(guildId) {
 			const stmt = db.prepare(`
@@ -338,7 +353,11 @@ function initMusicDatabase(db) {
 		},
 
 		/**
-		 * Clear all track reactions for a specific video in a guild.
+		 * Delete all track reactions for a single video in a guild.
+		 *
+		 * @param {string} videoUrl - Video URL
+		 * @param {string} guildId - Guild ID
+		 * @returns {number} Number of deleted records
 		 */
 		clearVideoReactions(videoUrl, guildId) {
 			const stmt = db.prepare(`
