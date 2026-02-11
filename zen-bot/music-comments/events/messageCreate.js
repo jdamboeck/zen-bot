@@ -1,5 +1,8 @@
 /**
- * Message create event - handles replies to tracked "enqueued" messages.
+ * messageCreate handler — records replies to the tracked enqueued message as track comments.
+ * Runs after core command handler; only processes messages that are replies to the active session message.
+ *
+ * @module zen-bot/music-comments/events/messageCreate
  */
 
 const services = require("../services");
@@ -8,9 +11,12 @@ module.exports = {
 	event: "messageCreate",
 	target: "client",
 
+	/**
+	 * @param {import("discord.js").Message} message
+	 * @param {object} ctx - Shared context (ctx.services.comments, ctx.db.music)
+	 * @returns {Promise<boolean>} True if message was a reply to tracked message and was handled
+	 */
 	async handle(message, ctx) {
-		// Let the command handler run first - if it returns true, it handled the message
-		// This event handler only processes replies to tracked messages
 		return services.handlePotentialReply(message, ctx);
 	},
 };

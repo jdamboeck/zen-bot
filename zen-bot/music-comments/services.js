@@ -1,5 +1,8 @@
 /**
- * Track comments services - session management and comment scheduling.
+ * Track comments services — session lifecycle, reply/reaction recording, and scheduled playback.
+ * One active session per guild; replies to the enqueued message and reactions are stored with timestamps and replayed when the track plays.
+ *
+ * @module zen-bot/music-comments/services
  */
 
 const { ThreadAutoArchiveDuration } = require("discord.js");
@@ -8,8 +11,9 @@ const { createLogger } = require("../core/logger");
 const log = createLogger("music-comments");
 
 /**
- * Active tracking sessions per guild.
- * Map<guildId, { messageId, trackUrl, startTime, channelId, message, threadChannel?, scheduledTimeouts }>
+ * Active tracking session per guild. Key: guildId.
+ * Value: { messageId, trackUrl, trackTitle, startTime, channelId, message, threadChannel?, scheduledTimeouts }.
+ * @type {Map<string, object>}
  */
 const activeSessions = new Map();
 
@@ -27,7 +31,11 @@ const MAX_COMMENT_LENGTH = 200;
 const COMMAND_PREFIX = "#";
 
 /**
- * Truncate text to a maximum length, preserving URLs.
+ * Truncate text to maxLength (per line); URLs are left untruncated.
+ *
+ * @param {string} text
+ * @param {number} [maxLength=MAX_COMMENT_LENGTH]
+ * @returns {string}
  */
 function truncateText(text, maxLength = MAX_COMMENT_LENGTH) {
 	if (text.startsWith("http://") || text.startsWith("https://")) {
@@ -51,8 +59,12 @@ function truncateText(text, maxLength = MAX_COMMENT_LENGTH) {
 }
 
 /**
- * Start tracking a session for reply monitoring.
- * @param {string} [trackTitle] - Track title for the reactions headline
+ * Start a tracking session for this guild; any previous session is stopped.
+ *
+ * @param {string} guildId
+ * @param {import("discord.js").Message} message - Enqueued message to monitor replies/reactions
+ * @param {string} trackUrl - Current track URL (for DB keys)
+ * @param {string} [trackTitle=""] - Track title (e.g. for playback headline)
  */
 function startTrackingSession(guildId, message, trackUrl, trackTitle = "") {
 	stopTrackingSession(guildId);
@@ -72,7 +84,9 @@ function startTrackingSession(guildId, message, trackUrl, trackTitle = "") {
 }
 
 /**
- * Stop tracking a session and cancel all scheduled comment playbacks.
+ * Stop the session for this guild and clear all scheduled playback timeouts.
+ *
+ * @param {string} guildId
  */
 function stopTrackingSession(guildId) {
 	const session = activeSessions.get(guildId);
@@ -87,7 +101,8 @@ function stopTrackingSession(guildId) {
 }
 
 /**
- * Get the active session for a guild.
+ * @param {string} guildId
+ * @returns {object|undefined} Active session or undefined
  */
 function getActiveSession(guildId) {
 	return activeSessions.get(guildId);
@@ -138,7 +153,12 @@ async function ensurePlaybackThread(guildId, message, trackUrl, ctx) {
 const REACTION_BIG_REPEAT = 3;
 
 /**
- * Schedule comment playback for all stored comments on a track.
+ * Schedule sending each stored comment to the channel at its timestamp (relative to session start).
+ *
+ * @param {string} guildId
+ * @param {import("discord.js").Message} message
+ * @param {string} trackUrl
+ * @param {object} ctx - Shared context (ctx.db.music)
  */
 function scheduleCommentPlayback(guildId, message, trackUrl, ctx) {
 	const session = activeSessions.get(guildId);
@@ -195,8 +215,12 @@ function scheduleCommentPlayback(guildId, message, trackUrl, ctx) {
 }
 
 /**
- * Schedule reaction playback for all stored reactions on a track.
- * Sends name then the reaction emoji prominently (on its own line, repeated for emphasis).
+ * Schedule sending each stored reaction at its timestamp (emoji repeated for emphasis).
+ *
+ * @param {string} guildId
+ * @param {import("discord.js").Message} message
+ * @param {string} trackUrl
+ * @param {object} ctx - Shared context (ctx.db.music)
  */
 function scheduleReactionPlayback(guildId, message, trackUrl, ctx) {
 	const session = activeSessions.get(guildId);
@@ -233,10 +257,13 @@ function scheduleReactionPlayback(guildId, message, trackUrl, ctx) {
 }
 
 /**
- * Schedule both comments and reactions in a single timeline.
- * Each reaction line: "EMOJI EMOJI  USERNAME  EMOJI EMOJI" (username in ALL CAPS), at its timestamp.
- * A blank line (vertical space) is sent after every played-back message for separation.
- * Recorded reactions are also added as real reactions on the enqueued message.
+ * Merge comments and reactions by timestamp and schedule playback (thread or channel).
+ * Sends a headline, then each item at its timestamp; reactions are also added to the enqueued message.
+ *
+ * @param {string} guildId
+ * @param {import("discord.js").Message} message - Enqueued message (for adding reactions)
+ * @param {string} trackUrl
+ * @param {object} ctx - Shared context (ctx.db.music)
  */
 function scheduleCommentAndReactionPlayback(guildId, message, trackUrl, ctx) {
 	const session = activeSessions.get(guildId);

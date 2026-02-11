@@ -1,16 +1,19 @@
 /**
- * Simple logger factory - no dependencies, no config files.
- * Usage: const log = require('./logger'); log.info('message');
- * Control via LOG_LEVEL env var: debug, info, warn, error (default: debug)
+ * Logger factory — prefixed console logging with level filtering.
+ * No config files; level is controlled by LOG_LEVEL env (debug | info | warn | error; default: debug).
+ *
+ * @module zen-bot/core/logger
  */
 
+/** @type {Record<string, number>} */
 const LOG_LEVELS = { debug: 0, info: 1, warn: 2, error: 3 };
 const currentLevel = LOG_LEVELS[process.env.LOG_LEVEL?.toLowerCase()] ?? LOG_LEVELS.debug;
 
 /**
- * Create a logger with a name prefix.
- * @param {string} name - Logger name (appears in brackets)
- * @returns {{ debug: Function, info: Function, warn: Function, error: Function }}
+ * Create a named logger. Output is prefixed with [name].
+ *
+ * @param {string} name - Logger name (e.g. "core", "music")
+ * @returns {{ debug: (...args: unknown[]) => void, info: (...args: unknown[]) => void, warn: (...args: unknown[]) => void, error: (...args: unknown[]) => void }}
  */
 function createLogger(name) {
 	const prefix = `[${name}]`;

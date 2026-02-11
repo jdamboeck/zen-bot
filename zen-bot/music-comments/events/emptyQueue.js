@@ -1,5 +1,7 @@
 /**
- * Empty queue event - stops tracking session.
+ * emptyQueue handler — stops the comment-tracking session for the guild so replies/reactions are no longer recorded.
+ *
+ * @module zen-bot/music-comments/events/emptyQueue
  */
 
 const { createLogger } = require("../../core/logger");
@@ -11,6 +13,10 @@ module.exports = {
 	event: "emptyQueue",
 	target: "player",
 
+	/**
+	 * @param {import("discord-player").GuildQueue} queue
+	 * @param {object} ctx
+	 */
 	async handle(queue, ctx) {
 		const guildId = queue?.channel?.guild?.id;
 		if (guildId) {

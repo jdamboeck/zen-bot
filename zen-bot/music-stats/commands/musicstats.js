@@ -1,6 +1,9 @@
 /**
- * Musicstats command - shows play statistics.
- * Uses Discord v2 display components (Container, TextDisplay, Section, Separator).
+ * Musicstats command — shows server and user play stats with Discord v2 components.
+ * Displays total plays, top listeners, top videos (overall and by user), last played, and play/stop buttons.
+ * Play buttons are resolved via playButtonStore; interactionCreate handles clicks.
+ *
+ * @module zen-bot/music-stats/commands/musicstats
  */
 
 const {
@@ -26,11 +29,15 @@ const STOP_ICON = "⏹️ ";
 /** Discord button label max length. */
 const BUTTON_LABEL_MAX = 65;
 
-/** Title length in button (with leading space + "▶️ N. " prefix we stay under 80). */
+/** Max title length in button label (with "▶️ N. " prefix). */
 const BUTTON_TITLE_LENGTH = 50;
 
 /**
- * Truncate a title to a maximum length.
+ * Truncate title with "..." if over maxLength.
+ *
+ * @param {string} title
+ * @param {number} maxLength
+ * @returns {string}
  */
 function truncateTitle(title, maxLength) {
 	if (title.length <= maxLength) return title;
@@ -38,11 +45,11 @@ function truncateTitle(title, maxLength) {
 }
 
 /**
- * Build Section components for video entries.
- * Each Section has a TextDisplay with play count and a Button accessory.
- * @param {Array} entries - Video entries with video_title, video_url, play_count
- * @param {number} startIndex - Starting index for button customId
- * @returns {Array} Array of SectionBuilder components
+ * Build Section components for a list of video entries (play count + play button each).
+ *
+ * @param {Array<{ video_title: string, video_url: string, play_count: number }>} entries
+ * @param {number} startIndex - First button index (for customId musicstats_play_N)
+ * @returns {import("discord.js").SectionBuilder[]}
  */
 function buildVideoSections(entries, startIndex) {
 	const sections = [];
@@ -71,6 +78,14 @@ function buildVideoSections(entries, startIndex) {
 module.exports = {
 	name: "musicstats",
 
+	/**
+	 * Build and send a Container with stats and play/stop buttons; store URLs in playButtonStore.
+	 *
+	 * @param {import("discord.js").Message} message
+	 * @param {string[]} args
+	 * @param {object} ctx - Shared context (ctx.db.music)
+	 * @returns {Promise<import("discord.js").Message>}
+	 */
 	async execute(message, args, ctx) {
 		const guildId = message.guild.id;
 		const userId = message.author.id;

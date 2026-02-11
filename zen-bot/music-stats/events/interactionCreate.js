@@ -1,5 +1,8 @@
 /**
- * Interaction create event - handles musicstats play buttons (runs #play with that video).
+ * interactionCreate handler — handles musicstats play and stop buttons.
+ * Play buttons resolve URL from playButtonStore and invoke the play command; stop invokes the stop command.
+ *
+ * @module zen-bot/music-stats/events/interactionCreate
  */
 
 const { createLogger } = require("../../core/logger");
@@ -14,6 +17,13 @@ module.exports = {
 	event: "interactionCreate",
 	target: "client",
 
+	/**
+	 * Only handles button interactions with customId musicstats_play_N or musicstats_stop.
+	 *
+	 * @param {import("discord.js").Interaction} interaction
+	 * @param {object} ctx - Shared context (commands)
+	 * @returns {Promise<boolean>} True if this handler processed the interaction
+	 */
 	async handle(interaction, ctx) {
 		if (!interaction.isButton()) return false;
 

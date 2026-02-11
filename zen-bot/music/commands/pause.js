@@ -1,5 +1,7 @@
 /**
- * Pause command - pauses playback.
+ * Pause command — pauses the current track (queue remains).
+ *
+ * @module zen-bot/music/commands/pause
  */
 
 const { useQueue } = require("discord-player");
@@ -10,6 +12,12 @@ const log = createLogger("pause");
 module.exports = {
 	name: "pause",
 
+	/**
+	 * @param {import("discord.js").Message} message
+	 * @param {string[]} args
+	 * @param {object} ctx
+	 * @returns {Promise<import("discord.js").Message>}
+	 */
 	async execute(message, args, ctx) {
 		const queue = useQueue(message.guild.id);
 		if (!queue) {

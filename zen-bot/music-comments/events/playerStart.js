@@ -1,5 +1,8 @@
 /**
- * Player start event - starts tracking session and schedules comments.
+ * playerStart handler — starts comment/reaction tracking and schedules playback from DB.
+ * Uses queue.metadata.enqueuedMessage; creates thread if there are stored comments/reactions.
+ *
+ * @module zen-bot/music-comments/events/playerStart
  */
 
 const { createLogger } = require("../../core/logger");
@@ -11,6 +14,11 @@ module.exports = {
 	event: "playerStart",
 	target: "player",
 
+	/**
+	 * @param {import("discord-player").GuildQueue} queue - metadata.enqueuedMessage from play command
+	 * @param {import("discord-player").Track} track
+	 * @param {object} ctx - Shared context (ctx.db.music)
+	 */
 	async handle(queue, track, ctx) {
 		const channel = queue.channel;
 		const guild = channel?.guild;

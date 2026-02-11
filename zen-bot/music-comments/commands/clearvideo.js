@@ -1,5 +1,8 @@
 /**
- * Clear video command - clears comments for the currently playing track.
+ * Clearvideo command — clears comments and reactions for the current track only.
+ * Must be used as a reply to the enqueued message of the currently playing track. Requires Administrator.
+ *
+ * @module zen-bot/music-comments/commands/clearvideo
  */
 
 const { createLogger } = require("../../core/logger");
@@ -10,6 +13,12 @@ module.exports = {
 	name: "clearvideo",
 	permissions: ["Administrator"],
 
+	/**
+	 * @param {import("discord.js").Message} message - Must be a reply to the current track's enqueued message
+	 * @param {string[]} args
+	 * @param {object} ctx - Shared context (ctx.services.comments, ctx.db.music)
+	 * @returns {Promise<import("discord.js").Message>}
+	 */
 	async execute(message, args, ctx) {
 		if (!message.member.permissions.has("Administrator")) {
 			log.debug("Clearvideo refused: user lacks Administrator (guild:", message.guild.id, ")");

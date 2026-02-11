@@ -1,5 +1,8 @@
 /**
- * Clear command - bulk delete messages from a channel.
+ * Clear command — bulk-delete messages in the current channel.
+ * Requires ManageMessages for author and bot. Recent messages (< 14 days) use bulkDelete; older ones are deleted one-by-one with delay to avoid rate limits.
+ *
+ * @module zen-bot/moderation/commands/clear
  */
 
 const { createLogger } = require("../../core/logger");
@@ -10,8 +13,16 @@ module.exports = {
 	name: "clear",
 	permissions: ["ManageMessages"],
 
+	/**
+	 * First arg = number of messages to delete (default 100). Sends a status message, then clears.
+	 *
+	 * @param {import("discord.js").Message} message
+	 * @param {string[]} args - Optional: single number (e.g. ["50"])
+	 * @param {object} ctx
+	 * @returns {Promise<import("discord.js").Message|void>}
+	 */
 	async execute(message, args, ctx) {
-		// Check if user has permission to manage messages
+		// Require ManageMessages for both user and bot
 		if (!message.member.permissionsIn(message.channel).has("ManageMessages")) {
 			log.debug("Clear refused: user lacks ManageMessages (guild:", message.guild.id, ")");
 			return message.reply("🛑 You need the 'Manage Messages' permission to use this command.");

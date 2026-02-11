@@ -1,5 +1,7 @@
 /**
- * Moderation feature - Channel moderation commands.
+ * Moderation feature — provides channel moderation commands (e.g. clear).
+ *
+ * @module zen-bot/moderation
  */
 
 const { createLogger } = require("../core/logger");
@@ -7,8 +9,10 @@ const { createLogger } = require("../core/logger");
 const log = createLogger("moderation");
 
 /**
- * Initialize the moderation feature.
- * @param {object} ctx - Shared context object
+ * No-op init; commands are loaded by core from moderation/commands.
+ *
+ * @param {object} ctx - Shared context
+ * @returns {Promise<void>}
  */
 async function init(ctx) {
 	log.info("Initializing moderation...");

@@ -1,5 +1,7 @@
 /**
- * Player start event - records play to database.
+ * playerStart handler — records each play to ctx.db.music (play_history) for musicstats.
+ *
+ * @module zen-bot/music-stats/events/playerStart
  */
 
 const { createLogger } = require("../../core/logger");
@@ -10,6 +12,11 @@ module.exports = {
 	event: "playerStart",
 	target: "player",
 
+	/**
+	 * @param {import("discord-player").GuildQueue} queue - metadata.author is the requesting user
+	 * @param {import("discord-player").Track} track
+	 * @param {object} ctx - Shared context (ctx.db.music)
+	 */
 	async handle(queue, track, ctx) {
 		const channel = queue.channel;
 		const guild = channel?.guild;

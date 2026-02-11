@@ -1,5 +1,9 @@
 /**
- * Feature loader - auto-discovers features and wires up events.
+ * zen-bot entry point and feature loader.
+ * Loads features in FEATURE_ORDER, collects event handlers from each feature's events/ dir,
+ * wires them to the Discord client or player, then logs in.
+ *
+ * @module zen-bot
  */
 
 const fs = require("fs");
@@ -8,10 +12,7 @@ const { createLogger } = require("./core/logger");
 
 const log = createLogger("loader");
 
-/**
- * Feature load order - features are loaded in this order.
- * Dependencies are implicit from this ordering.
- */
+/** Load order; later features can depend on ctx populated by earlier ones (e.g. core before music). */
 const FEATURE_ORDER = [
 	"core",
 	"music",
@@ -21,9 +22,12 @@ const FEATURE_ORDER = [
 ];
 
 /**
- * Collect event handlers from a feature's events directory.
- * @param {string} featurePath - Path to feature directory
- * @returns {Array<{event: string, target: string, handle: Function, feature: string}>}
+ * Load event handlers from a feature's events/ directory.
+ * Each .js file must export { event, target, handle }.
+ *
+ * @param {string} featurePath - Absolute path to the feature directory (e.g. zen-bot/music)
+ * @param {string} featureName - Feature name (e.g. "music") for logging and handler metadata
+ * @returns {Array<{ event: string, target: "client"|"player", handle: Function, feature: string }>}
  */
 function collectEventHandlers(featurePath, featureName) {
 	const eventsDir = path.join(featurePath, "events");
@@ -52,9 +56,10 @@ function collectEventHandlers(featurePath, featureName) {
 }
 
 /**
- * Wire up event handlers to their targets.
- * @param {object} ctx - Shared context
- * @param {Array} handlers - All collected event handlers
+ * Attach all collected handlers to ctx.client (target "client") or ctx.player.events (target "player").
+ *
+ * @param {object} ctx - Shared context (client, player)
+ * @param {Array<{ event: string, target: string, handle: Function, feature: string }>} handlers
  */
 function wireEvents(ctx, handlers) {
 	// Group handlers by event and target
@@ -105,7 +110,9 @@ function wireEvents(ctx, handlers) {
 }
 
 /**
- * Initialize and start zen-bot.
+ * Load features, wire events, and log in. Resolves with the shared context when ready.
+ *
+ * @returns {Promise<object>} Shared context (client, player, db, commands, config, etc.)
  */
 async function start() {
 	log.info("Starting zen-bot...");

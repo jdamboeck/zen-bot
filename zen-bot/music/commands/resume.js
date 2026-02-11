@@ -1,5 +1,7 @@
 /**
- * Resume command - resumes playback.
+ * Resume command — resumes paused playback.
+ *
+ * @module zen-bot/music/commands/resume
  */
 
 const { useQueue } = require("discord-player");
@@ -10,6 +12,12 @@ const log = createLogger("resume");
 module.exports = {
 	name: "resume",
 
+	/**
+	 * @param {import("discord.js").Message} message
+	 * @param {string[]} args
+	 * @param {object} ctx
+	 * @returns {Promise<import("discord.js").Message>}
+	 */
 	async execute(message, args, ctx) {
 		const queue = useQueue(message.guild.id);
 		if (!queue) {

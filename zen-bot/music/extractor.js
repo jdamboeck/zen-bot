@@ -1,5 +1,8 @@
 /**
- * yt-dlp extractor for discord-player.
+ * yt-dlp extractor for discord-player — resolves YouTube URLs and search queries,
+ * returns track metadata via --dump-json, and streams audio with optional PO token for YouTube.
+ *
+ * @module zen-bot/music/extractor
  */
 
 const { spawn, spawnSync } = require("child_process");
@@ -13,20 +16,21 @@ const config = require("./config");
 
 const log = createLogger("yt-dlp");
 
-// ---- Path Resolution (inlined from ytdlp-path.js) ----
-
 const projectRoot = path.join(__dirname, "..", "..");
 const localBinary = path.join(projectRoot, process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
 
+/**
+ * Resolve yt-dlp binary: prefer system PATH, then project-local binary.
+ *
+ * @returns {string} Binary name or path
+ */
 function getYtDlpPath() {
-	// 1. System-installed (PATH)
 	try {
 		const r = spawnSync("yt-dlp", ["--version"], { encoding: "utf8", stdio: "pipe" });
 		if (r.status === 0) return "yt-dlp";
 	} catch {
 		// not in PATH
 	}
-	// 2. Project folder binary
 	try {
 		fs.accessSync(localBinary, fs.constants.X_OK);
 		return localBinary;
@@ -36,6 +40,11 @@ function getYtDlpPath() {
 	return "yt-dlp";
 }
 
+/**
+ * yt-dlp args for JS runtime (required by some extractors).
+ *
+ * @returns {string[]}
+ */
 function getJsRuntimeArgs() {
 	return ["--js-runtimes", `node:${process.execPath}`];
 }
@@ -47,6 +56,10 @@ log.info("Using yt-dlp at:", YTDLP_PATH);
 
 const poTokenCache = new PoTokenCache(config.poTokenTtlHours);
 
+/**
+ * discord-player extractor that uses yt-dlp for metadata and streaming.
+ * Handles YouTube URLs and search queries (ytsearch); optional PO token for streaming.
+ */
 class YtDlpExtractor extends BaseExtractor {
 	static identifier = "com.custom.yt-dlp";
 
@@ -54,6 +67,12 @@ class YtDlpExtractor extends BaseExtractor {
 		super();
 	}
 
+	/**
+	 * Accept YouTube URLs and non-URL search queries.
+	 *
+	 * @param {string} query - User input (URL or search text)
+	 * @returns {Promise<boolean>}
+	 */
 	async validate(query) {
 		const isYouTube = url.isYouTubeUrl(query);
 		const isSearchQuery = !query.startsWith("http");
@@ -62,9 +81,16 @@ class YtDlpExtractor extends BaseExtractor {
 		return shouldHandle;
 	}
 
+	/**
+	 * Fetch track metadata via yt-dlp --dump-json (single track, no playlists).
+	 *
+	 * @param {string} query - URL or ytsearch1: query
+	 * @param {object} context - discord-player context
+	 * @returns {Promise<{ playlist: null, tracks: object[] }>}
+	 */
 	async handle(query, context) {
 		log.info("Processing:", query);
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			const isUrl = query.startsWith("http");
 			const args = [
 				...getJsRuntimeArgs(),
@@ -111,6 +137,12 @@ class YtDlpExtractor extends BaseExtractor {
 		});
 	}
 
+	/**
+	 * Stream audio from the track URL. Uses PO token when available for YouTube.
+	 *
+	 * @param {object} info - Track info (url, title, etc.)
+	 * @returns {import("stream").Readable} Readable stream of audio data
+	 */
 	async stream(info) {
 		log.info(`Streaming: ${info.title} (${info.url})`);
 

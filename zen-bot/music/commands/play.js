@@ -1,5 +1,8 @@
 /**
- * Play command - plays music from YouTube.
+ * Play command — enqueue a track from a YouTube URL or search query.
+ * Requires user in voice channel; stores enqueued message in queue.metadata for track comments.
+ *
+ * @module zen-bot/music/commands/play
  */
 
 const { useQueue } = require("discord-player");
@@ -11,6 +14,14 @@ module.exports = {
 	name: "play",
 	aliases: ["p"],
 
+	/**
+	 * Play or enqueue: args joined as query (URL or search). Replies with enqueued message.
+	 *
+	 * @param {import("discord.js").Message} message
+	 * @param {string[]} args - Query words (e.g. ["https://youtube.com/..."] or ["search", "terms"])
+	 * @param {object} ctx - Shared context (player, musicConfig)
+	 * @returns {Promise<import("discord.js").Message>}
+	 */
 	async execute(message, args, ctx) {
 		const query = args.join(" ");
 		log.info(`Attempting to play: ${query}`);
