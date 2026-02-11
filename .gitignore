@@ -1,0 +1,21 @@
+
+# Node modules
+node_modules/
+
+# PO token provider
+bgutil-ytdlp-pot-provider/
+
+// Environment files
+env.json
+po-provider.pid
+
+# Python cache
+**/__pycache__/**
+
+# yt-dlp executables
+yt-dlp.exe
+yt-dlp
+yt-dlp-plugins/
+
+# Database files
+*.db
