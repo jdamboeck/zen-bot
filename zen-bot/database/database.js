@@ -1,20 +1,20 @@
 /**
- * Core Database Module - Shared SQLite connection with namespaced access.
+ * Database Module - Shared SQLite connection with namespaced access.
  *
  * This module provides a single database connection that multiple features
  * can use by registering their own namespaces. Each feature adds its tables
  * and query functions to ctx.db.[namespace].
  *
  * PATTERN:
- * - Core initializes the database connection
+ * - Database feature initializes the database connection
  * - Features call ctx.db.register(namespace, initFn) to add their tables
  * - Query functions are accessed via ctx.db.[namespace].[method]
  *
- * @module zen-bot/core/database
+ * @module zen-bot/database/database
  */
 
 const Database = require("better-sqlite3");
-const { createLogger } = require("./logger");
+const { createLogger } = require("../core/logger");
 
 const log = createLogger("database");
 

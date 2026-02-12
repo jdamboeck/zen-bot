@@ -190,7 +190,8 @@ zen-bot uses a feature-based architecture. See [CONTRIBUTING.md](CONTRIBUTING.md
 ```
 zen-bot/
 ├── index.js          # Feature loader
-├── core/             # Core feature (client, commands, services, database)
+├── core/             # Core feature (client, commands, services)
+├── database/         # Database feature (ctx.db)
 ├── music/            # Music playback
 ├── music-stats/      # Play history tracking
 ├── music-comments/   # Timestamp comments
