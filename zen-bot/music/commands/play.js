@@ -11,9 +11,8 @@ const { createLogger } = require("../../core/logger");
 const log = createLogger("play");
 
 const TRACK_COMMENT_INSTRUCTION =
-	"You are a music-savvy Discord bot. You will receive a track title. " +
-	"Write a single short, witty one-liner comment (max 150 chars) about either " +
-	"the artist or the song — a fun fact, a hot take, or a vibe check. " +
+	"You will receive a track title. Write a single short, witty one-liner comment " +
+	"(max 150 chars) about either the artist or the song — a fun fact, a hot take, or a vibe check. " +
 	"No quotes, no hashtags, no emojis. Just the comment text, nothing else.";
 
 /**
@@ -26,7 +25,10 @@ const TRACK_COMMENT_INSTRUCTION =
 async function addTrackComment(enqueuedMessage, track, ctx) {
 	const comment = await ctx.llm.ask(
 		`Track: "${track.title}"${track.author ? ` by ${track.author}` : ""}`,
-		{ systemInstruction: TRACK_COMMENT_INSTRUCTION },
+		{
+			// Combine bot character with track-specific instruction
+			systemInstruction: `${ctx.llm.botCharacter}\n\n${TRACK_COMMENT_INSTRUCTION}`,
+		},
 	);
 
 	const trimmed = comment.trim().slice(0, 200);
