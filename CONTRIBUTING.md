@@ -24,6 +24,9 @@ zen-bot/
 │   └── services/         # Shared services
 │       ├── activity.js
 │       └── soundboard.js
+├── database/             # Database feature (ctx.db)
+│   ├── index.js          # Feature entry point
+│   └── database.js       # SQLite connection and context
 ├── music/                # Music feature
 │   ├── index.js
 │   ├── config.js
@@ -52,7 +55,7 @@ Features communicate through a shared context object passed to all `init()` func
 ctx = {
   client: Client,           // Discord.js client (set by core)
   player: Player,           // discord-player instance (set by music)
-  db: {                     // Database context (set by core)
+  db: {                     // Database context (set by database feature)
     register: Function,     // Register a namespace: ctx.db.register("name", initFn)
     connection: Database,   // Raw better-sqlite3 connection
     close: Function,        // Close database connection
@@ -96,11 +99,12 @@ Edit `zen-bot/index.js` and add your feature to `FEATURE_ORDER`:
 ```javascript
 const FEATURE_ORDER = [
   "core",           // Must be first
-  "music",          // Provides player
+  "database",      // Provides ctx.db; must run before any feature that uses it
+  "music",         // Provides player
   "moderation",
-  "music-stats",    // Provides database
+  "music-stats",   // Registers ctx.db.music
   "music-comments", // Depends on music-stats
-  "my-feature",     // Your feature (add here)
+  "my-feature",    // Your feature (add here)
 ];
 ```
 
@@ -356,7 +360,7 @@ async function execute(message, args, ctx) {
 
 ## Database
 
-The `core` feature provides a shared SQLite database through `ctx.db`. Features register their own **namespaces** to add tables and query functions.
+The **database** feature provides a shared SQLite database through `ctx.db`. It must appear in `FEATURE_ORDER` after core and before any feature that registers or uses `ctx.db`. Features register their own **namespaces** to add tables and query functions.
 
 ### Database Architecture
 

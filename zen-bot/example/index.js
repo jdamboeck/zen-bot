@@ -11,9 +11,10 @@
  *
  * FEATURE DEPENDENCIES:
  * This feature depends on:
- * - core (for client, commands, services.activity, database)
+ * - core (for client, commands, services.activity)
+ * - database (for ctx.db)
  *
- * Ensure this feature is listed AFTER core in FEATURE_ORDER.
+ * Ensure this feature is listed AFTER core and database in FEATURE_ORDER.
  *
  * @module zen-bot/example
  */
@@ -37,7 +38,7 @@ const log = createLogger("example");
  * @param {object} ctx - Shared context object
  * @param {import('discord.js').Client} ctx.client - Discord.js client (from core)
  * @param {import('discord-player').Player} ctx.player - discord-player instance (from music)
- * @param {object} ctx.db - Database context with namespaced access (from core)
+ * @param {object} ctx.db - Database context with namespaced access (from database feature)
  * @param {Map} ctx.commands - Command registry (from core)
  * @param {object} ctx.services - Shared services from all features
  * @param {object} ctx.config - Core configuration (token, prefix)
@@ -56,7 +57,7 @@ async function init(ctx) {
 	}
 
 	if (!ctx.db) {
-		throw new Error("Example feature requires core feature (ctx.db missing)");
+		throw new Error("Example feature requires database feature (ctx.db missing)");
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────

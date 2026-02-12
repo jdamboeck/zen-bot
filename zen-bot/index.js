@@ -12,9 +12,10 @@ const { createLogger } = require("./core/logger");
 
 const log = createLogger("loader");
 
-/** Load order; later features can depend on ctx populated by earlier ones (e.g. core before music). */
+/** Load order; later features can depend on ctx populated by earlier ones. database must follow core and precede any feature that uses ctx.db. */
 const FEATURE_ORDER = [
 	"core",
+	"database",
 	"music",
 	"moderation",
 	"music-stats",
