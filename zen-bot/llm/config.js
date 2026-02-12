@@ -20,4 +20,12 @@ module.exports = {
 
 	/** Model name. Env: LLM_MODEL */
 	model: process.env.LLM_MODEL || "gemini-3-flash-preview",
+
+	/** Max length for #ask reply before truncation. Env: LLM_ASK_MAX_RESPONSE_LENGTH */
+	askMaxResponseLength: parseInt(process.env.LLM_ASK_MAX_RESPONSE_LENGTH, 10) || 1900,
+
+	/** Task instruction appended for #ask (Discord-friendly). Env: LLM_ASK_APPEND_INSTRUCTION */
+	askAppendInstruction:
+		process.env.LLM_ASK_APPEND_INSTRUCTION ||
+		"Keep answers concise; Discord has a 2000 character limit. Use Discord-friendly markdown (bold, italic, code blocks).",
 };
