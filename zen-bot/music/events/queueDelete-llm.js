@@ -1,5 +1,6 @@
 /**
  * queueDelete handler — stops periodic LLM-generated comments when the queue is deleted (#stop).
+ * We read queue.guild?.id immediately; the queue may be tearing down so we avoid further access.
  *
  * @module zen-bot/music/events/queueDelete-llm
  */
@@ -16,14 +17,21 @@ module.exports = {
 	/**
 	 * Stop periodic comments for this guild when the queue is deleted.
 	 *
-	 * @param {import("discord-player").GuildQueue} queue
-	 * @param {object} ctx
+	 * @param {import("discord-player").GuildQueue} queue - Queue being deleted (read guild once, then avoid further access)
+	 * @param {object} ctx - Shared context
 	 */
 	async handle(queue, ctx) {
-		const guildId = queue.guild?.id;
-		if (!guildId) return;
+		const guildId = queue?.guild?.id;
+		if (!guildId) {
+			log.debug("Queue deleted but no guild id; skipping periodic comment cleanup");
+			return;
+		}
 
-		log.debug(`Queue deleted, stopping periodic comments (guild: ${guildId})`);
-		llmComments.stopPeriodicComments(guildId);
+		try {
+			log.debug(`Queue deleted, stopping periodic comments (guild: ${guildId})`);
+			llmComments.stopPeriodicComments(guildId);
+		} catch (err) {
+			log.warn("Error stopping periodic comments on queue delete:", err.message);
+		}
 	},
 };
