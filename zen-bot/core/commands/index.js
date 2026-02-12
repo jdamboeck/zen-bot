@@ -13,19 +13,22 @@ const { createLogger } = require("../logger");
 const log = createLogger("commands");
 
 /**
- * Load all commands from zen-bot feature directories.
- * Skips index.js and files missing name or execute.
+ * Load commands from zen-bot feature directories.
+ * If enabledFeatures is provided, only those features are scanned; otherwise all feature dirs are scanned.
+ * Skips index.js and files missing name or execute. Each command is tagged with .feature.
  *
- * @returns {Map<string, { name: string, execute: Function, aliases?: string[], permissions?: string[] }>}
+ * @param {string[]} [enabledFeatures] - Feature names to load commands from (e.g. from ctx.enabledFeatures)
+ * @returns {Map<string, { name: string, execute: Function, aliases?: string[], feature: string }>}
  */
-function loadCommands() {
+function loadCommands(enabledFeatures) {
 	const commands = new Map();
 	const zenBotDir = path.join(__dirname, "..", "..");
 
-	// Get all feature directories
-	const features = fs.readdirSync(zenBotDir, { withFileTypes: true })
-		.filter((d) => d.isDirectory() && d.name !== "node_modules")
-		.map((d) => d.name);
+	const features = enabledFeatures != null && enabledFeatures.length > 0
+		? enabledFeatures
+		: fs.readdirSync(zenBotDir, { withFileTypes: true })
+			.filter((d) => d.isDirectory() && d.name !== "node_modules")
+			.map((d) => d.name);
 
 	for (const feature of features) {
 		const commandsDir = path.join(zenBotDir, feature, "commands");
@@ -44,12 +47,17 @@ function loadCommands() {
 					continue;
 				}
 
-				commands.set(command.name, command);
+				command.feature = feature;
+				// Register by primary name (lowercase so messageCreate lookup matches)
+				const nameKey = String(command.name).toLowerCase();
+				if (!nameKey) continue;
+				commands.set(nameKey, command);
 
-				// Register aliases
+				// Register aliases (shortcuts) with same normalization
 				if (Array.isArray(command.aliases)) {
 					for (const alias of command.aliases) {
-						commands.set(alias, command);
+						const aliasKey = String(alias).toLowerCase();
+						if (aliasKey) commands.set(aliasKey, command);
 					}
 				}
 

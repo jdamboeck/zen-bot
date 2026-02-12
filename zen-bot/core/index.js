@@ -39,8 +39,8 @@ async function init(ctx) {
 	// Initialize database context (features register their namespaces)
 	ctx.db = createDatabaseContext();
 
-	// Load commands from all features
-	ctx.commands = loadCommands();
+	// Load commands only from enabled features
+	ctx.commands = loadCommands(ctx.enabledFeatures);
 
 	// Export services for other features
 	ctx.services = {
