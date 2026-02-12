@@ -7,7 +7,7 @@
 
 const { useQueue } = require("discord-player");
 const { createLogger } = require("../../core/logger");
-const { TRACK_COMMENT_INSTRUCTION } = require("../services/llm-comments");
+const config = require("../config");
 
 const log = createLogger("play");
 
@@ -21,10 +21,10 @@ const log = createLogger("play");
 async function addTrackComment(enqueuedMessage, track, ctx) {
 	const comment = await ctx.llm.ask(
 		`Track: "${track.title}"${track.author ? ` by ${track.author}` : ""}`,
-		{ appendInstruction: TRACK_COMMENT_INSTRUCTION },
+		{ appendInstruction: config.llmTrackCommentInstruction },
 	);
 
-	const trimmed = comment.trim().slice(0, 200);
+	const trimmed = comment.trim().slice(0, config.llmSingleCommentMaxChars);
 	if (!trimmed) return;
 
 	log.debug(`LLM track comment for "${track.title}": ${trimmed}`);

@@ -33,21 +33,18 @@ const config = require("./config");
 
 const log = createLogger("llm");
 
-/** Default model to use. */
-const DEFAULT_MODEL = "gemini-3-flash-preview";
-
 /**
  * Create the LLM context object that gets attached to ctx.llm.
- * Bot character: options.botCharacter, or config.botCharacter (single source in config.js).
+ * Model and bot character: options override, else config (single source in config.js).
  *
  * @param {string} apiKey - Gemini API key
  * @param {object} [options]
- * @param {string} [options.model] - Model name override (default: gemini-3-flash-preview)
+ * @param {string} [options.model] - Model name override
  * @param {string} [options.botCharacter] - Bot character template override
  * @returns {object} LLM context object
  */
 function createLlmContext(apiKey, options = {}) {
-	const modelName = options.model || DEFAULT_MODEL;
+	const modelName = options.model ?? config.model;
 	const botCharacter = options.botCharacter ?? config.botCharacter;
 	const genAI = new GoogleGenerativeAI(apiKey);
 	const model = genAI.getGenerativeModel({ model: modelName });

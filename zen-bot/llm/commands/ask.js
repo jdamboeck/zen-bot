@@ -5,15 +5,9 @@
  */
 
 const { createLogger } = require("../../core/logger");
+const config = require("../config");
 
 const log = createLogger("ask");
-
-/** Discord message cap is 2 000 chars. Leave room for formatting. */
-const MAX_RESPONSE_LENGTH = 1900;
-
-/** Task instruction for #ask: uses shared bot character + this. */
-const ASK_APPEND_INSTRUCTION =
-	"Keep answers concise; Discord has a 2000 character limit. Use Discord-friendly markdown (bold, italic, code blocks).";
 
 module.exports = {
 	name: "ask",
@@ -42,14 +36,15 @@ module.exports = {
 
 		try {
 			let answer = await ctx.llm.ask(question, {
-				appendInstruction: ASK_APPEND_INSTRUCTION,
+				appendInstruction: config.askAppendInstruction,
 			});
 
+			const maxLen = config.askMaxResponseLength;
 			log.info(`Gemini reply (${answer.length} chars): ${answer.slice(0, 200)}${answer.length > 200 ? "…" : ""}`);
 
 			// Truncate if needed
-			if (answer.length > MAX_RESPONSE_LENGTH) {
-				answer = answer.slice(0, MAX_RESPONSE_LENGTH) + "\n\n*…response truncated*";
+			if (answer.length > maxLen) {
+				answer = answer.slice(0, maxLen) + "\n\n*…response truncated*";
 			}
 
 			return message.reply(answer);

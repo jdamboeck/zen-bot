@@ -8,26 +8,12 @@
  */
 
 const { createLogger } = require("../../core/logger");
+const config = require("../config");
 
 const log = createLogger("llm-comments");
 
-/** Interval between comments (2 minutes). */
-const COMMENT_INTERVAL_MS = 2 * 60 * 1000;
-
 /** Map of guildId -> interval ID for active comment intervals. */
 const activeIntervals = new Map();
-
-/** Discord message length limit. Use a safe cap to avoid failed edits. */
-const MAX_MESSAGE_LENGTH = 1950;
-
-/**
- * Track comment instruction — shared by play.js (first comment) and periodic comments.
- */
-const TRACK_COMMENT_INSTRUCTION =
-	"Write a single short, witty one-liner comment (max 150 chars) about either " +
-	"the artist or the song — a fun fact, a hot take, a trivia tidbit, or a vibe check. " +
-	"Make it different from previous comments. No quotes, no hashtags, no emojis. " +
-	"Just the comment text, nothing else.";
 
 /**
  * Start periodic comments for a track. Comments will be added every 2 minutes
@@ -64,10 +50,10 @@ function startPeriodicComments(guildId, enqueuedMessage, track, ctx) {
 			// Generate a new comment
 			const comment = await ctx.llm.ask(
 				`Track: "${track.title}"${track.author ? ` by ${track.author}` : ""}`,
-				{ appendInstruction: TRACK_COMMENT_INSTRUCTION },
+				{ appendInstruction: config.llmTrackCommentInstruction },
 			);
 
-			const trimmed = comment.trim().slice(0, 200);
+			const trimmed = comment.trim().slice(0, config.llmSingleCommentMaxChars);
 			if (!trimmed) {
 				log.debug("Empty comment from LLM, skipping");
 				return;
@@ -75,8 +61,9 @@ function startPeriodicComments(guildId, enqueuedMessage, track, ctx) {
 
 			log.debug(`Periodic comment for "${track.title}": ${trimmed}`);
 
+			const maxMsgLen = config.llmEnqueuedMessageMaxLength;
 			let newContent = `${currentContent}\n*${trimmed}*`;
-			if (newContent.length > MAX_MESSAGE_LENGTH) {
+			if (newContent.length > maxMsgLen) {
 				const lines = currentContent.split("\n");
 				const firstLine = lines[0] || currentContent;
 				const oldCommentLines = lines.slice(1);
@@ -84,7 +71,7 @@ function startPeriodicComments(guildId, enqueuedMessage, track, ctx) {
 				let result = firstLine;
 				for (let i = allComments.length - 1; i >= 0; i--) {
 					const candidate = firstLine + "\n" + allComments.slice(i).join("\n");
-					if (candidate.length <= MAX_MESSAGE_LENGTH) {
+					if (candidate.length <= maxMsgLen) {
 						result = candidate;
 						break;
 					}
@@ -94,8 +81,8 @@ function startPeriodicComments(guildId, enqueuedMessage, track, ctx) {
 				}
 				newContent = result;
 				// Hard cap: first line or a single comment can exceed limit (e.g. very long title)
-				if (newContent.length > MAX_MESSAGE_LENGTH) {
-					newContent = newContent.slice(0, MAX_MESSAGE_LENGTH);
+				if (newContent.length > maxMsgLen) {
+					newContent = newContent.slice(0, maxMsgLen);
 					log.debug("Truncated enqueued message (hard cap) to fit Discord limit");
 				} else {
 					log.debug("Truncated enqueued message to fit Discord limit");
@@ -106,7 +93,7 @@ function startPeriodicComments(guildId, enqueuedMessage, track, ctx) {
 			log.warn("Failed to generate periodic comment:", err.message);
 			// Don't stop the interval on error, just log and continue
 		}
-	}, COMMENT_INTERVAL_MS);
+	}, config.llmCommentIntervalMs);
 
 	activeIntervals.set(guildId, intervalId);
 	log.info(`Started periodic comments for guild ${guildId}`);
@@ -142,6 +129,4 @@ module.exports = {
 	startPeriodicComments,
 	stopPeriodicComments,
 	stopAllPeriodicComments,
-	COMMENT_INTERVAL_MS,
-	TRACK_COMMENT_INSTRUCTION,
 };
