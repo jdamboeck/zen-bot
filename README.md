@@ -64,6 +64,8 @@ Use either:
 
 Do not commit `env.json`; it is listed in `.gitignore`.
 
+Optional: LLM features (#ask, AI track comments) use environment variables `LLM_GEMINI_API_KEY`, `LLM_BOT_CHARACTER`, and `LLM_MODEL` — see the table below.
+
 ### Environment Variables
 
 | Variable | Default | Description |
@@ -71,6 +73,9 @@ Do not commit `env.json`; it is listed in `.gitignore`.
 | `BOT_TOKEN` | — | Discord bot token (required) |
 | `PREFIX` | `#` | Command prefix |
 | `LOG_LEVEL` | `debug` | Logging level: debug, info, warn, error |
+| `LLM_GEMINI_API_KEY` | — | Gemini API key for #ask and track comments (optional) |
+| `LLM_BOT_CHARACTER` | (in-code default) | Bot personality for all LLM replies (optional) |
+| `LLM_MODEL` | `gemini-3-flash-preview` | Gemini model name (optional) |
 | `MUSIC_VOLUME` | `80` | Default playback volume (0-100) |
 | `MUSIC_LEAVE_ON_EMPTY_COOLDOWN` | `30000` | Leave empty channel after (ms) |
 | `MUSIC_LEAVE_ON_END_COOLDOWN` | `30000` | Leave after queue ends (ms) |
@@ -121,6 +126,7 @@ Default prefix: `#`
 
 | Command | Aliases | Description |
 |---------|---------|-------------|
+| `#ask <question>` | `#ai`, `#gem` | Ask the bot a question (uses Gemini LLM) |
 | `#play <query>` | `#p` | Play a track (URL or search term) |
 | `#stop` | — | Stop playback and clear queue |
 | `#skip` | — | Skip the currently playing track |
@@ -192,10 +198,11 @@ zen-bot/
 ├── index.js          # Feature loader
 ├── core/             # Core feature (client, commands, services)
 ├── database/         # Database feature (ctx.db)
-├── music/            # Music playback
-├── music-stats/      # Play history tracking
-├── music-comments/   # Timestamp comments
-└── moderation/       # Message moderation
+├── llm/              # LLM feature (ctx.llm, #ask, AI track comments)
+├── music/             # Music playback
+├── music-stats/       # Play history tracking
+├── music-comments/    # Timestamp comments
+└── moderation/        # Message moderation
 ```
 
 ## License

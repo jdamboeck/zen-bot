@@ -11,10 +11,9 @@ const log = createLogger("ask");
 /** Discord message cap is 2 000 chars. Leave room for formatting. */
 const MAX_RESPONSE_LENGTH = 1900;
 
-const SYSTEM_INSTRUCTION =
-	"You are a helpful Discord bot assistant. Keep your answers concise and to the point " +
-	"since Discord messages have a character limit. Use markdown formatting that works in " +
-	"Discord (bold, italic, code blocks, etc.).";
+/** Task instruction for #ask: uses shared bot character + this. */
+const ASK_APPEND_INSTRUCTION =
+	"Keep answers concise; Discord has a 2000 character limit. Use Discord-friendly markdown (bold, italic, code blocks).";
 
 module.exports = {
 	name: "ask",
@@ -23,7 +22,7 @@ module.exports = {
 	/**
 	 * @param {import("discord.js").Message} message
 	 * @param {string[]} args
-	 * @param {object} ctx - Shared context (llm, config)
+	 * @param {object} ctx - Shared context (llm)
 	 */
 	async execute(message, args, ctx) {
 		const question = args.join(" ").trim();
@@ -33,7 +32,7 @@ module.exports = {
 
 		if (!ctx.llm) {
 			log.warn("Ask command used but LLM feature is not available");
-			return message.reply("The AI feature is not configured. The bot owner needs to set a Gemini API key.");
+			return message.reply("The AI feature is not configured. Set LLM_GEMINI_API_KEY.");
 		}
 
 		log.info(`Ask from ${message.author.username}: ${question.slice(0, 80)}${question.length > 80 ? "…" : ""}`);
@@ -43,7 +42,7 @@ module.exports = {
 
 		try {
 			let answer = await ctx.llm.ask(question, {
-				systemInstruction: SYSTEM_INSTRUCTION,
+				appendInstruction: ASK_APPEND_INSTRUCTION,
 			});
 
 			log.info(`Gemini reply (${answer.length} chars): ${answer.slice(0, 200)}${answer.length > 200 ? "…" : ""}`);

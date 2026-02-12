@@ -35,29 +35,10 @@ const log = createLogger("llm");
 /** Default model to use. */
 const DEFAULT_MODEL = "gemini-3-flash-preview";
 
-/**
- * Default bot character template. Customize this to change the bot's personality
- * across all LLM interactions. This is prepended to all system instructions.
- *
- * You can override this by:
- * 1. Setting BOT_CHARACTER env var
- * 2. Adding botCharacter to env.json
- * 3. Passing a custom systemInstruction in opts (which replaces this)
- *
- * @type {string}
- */
-let envJson = {};
-try {
-	envJson = require("../../env.json");
-} catch (e) {
-	// env.json might not exist, that's okay
-}
-
+/** Fallback bot character when options.botCharacter is not provided (e.g. createLlmContext called without options). */
 const DEFAULT_BOT_CHARACTER =
-	process.env.BOT_CHARACTER ||
-	envJson.botCharacter ||
 	"You are a depressive, witty self deprecating Music Critic. You're knowledgeable, wise-ass, " +
-	"and have a dark sense of humor. Keep responses concise and funny but nevver enthusiastic. Keep the emojo usage dark and sarcastic. " +
+	"and have a dark sense of humor. Keep responses concise and funny but never enthusiastic. Keep the emoji usage dark and sarcastic. " +
 	"Use Discord-friendly markdown formatting (bold, italic, code blocks).";
 
 /**
@@ -76,9 +57,6 @@ function createLlmContext(apiKey, options = {}) {
 	const model = genAI.getGenerativeModel({ model: modelName });
 
 	log.info(`Gemini model ready: ${modelName}`);
-	if (botCharacter !== DEFAULT_BOT_CHARACTER) {
-		log.debug("Using custom bot character template");
-	}
 
 	const llmContext = {
 		/** The model name in use. */
@@ -109,8 +87,9 @@ function createLlmContext(apiKey, options = {}) {
 		 *
 		 * @param {string} prompt - The user prompt / question
 		 * @param {object} [opts]
-		 * @param {string} [opts.systemInstruction] - Optional system instruction text (replaces bot character if provided)
-		 * @param {boolean} [opts.useCharacter=true] - Whether to prepend bot character (ignored if systemInstruction provided)
+		 * @param {string} [opts.systemInstruction] - Full system instruction (replaces character if provided)
+		 * @param {string} [opts.appendInstruction] - Task instruction appended after bot character (ignored if systemInstruction provided)
+		 * @param {boolean} [opts.useCharacter=true] - Whether to use bot character (ignored if systemInstruction provided)
 		 * @returns {Promise<string>} The text response
 		 */
 		async ask(prompt, opts = {}) {
@@ -120,10 +99,11 @@ function createLlmContext(apiKey, options = {}) {
 				],
 			};
 
-			// Build system instruction: use provided one, or combine bot character with task-specific instruction
 			let systemInstruction = opts.systemInstruction;
 			if (!systemInstruction && opts.useCharacter !== false) {
-				systemInstruction = botCharacter;
+				systemInstruction = opts.appendInstruction
+					? `${botCharacter}\n\n${opts.appendInstruction}`
+					: botCharacter;
 			}
 
 			if (systemInstruction) {
