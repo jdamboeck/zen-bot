@@ -18,7 +18,7 @@ const config = require("../config");
 const log = createLogger("example-ready");
 
 module.exports = {
-	event: "ready",
+	event: "clientReady",
 	target: "client",
 
 	/**

@@ -9,7 +9,7 @@ const { createLogger } = require("../logger");
 const log = createLogger("core");
 
 module.exports = {
-	event: "ready",
+	event: "clientReady",
 	target: "client",
 
 	/**
