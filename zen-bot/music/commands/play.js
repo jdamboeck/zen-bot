@@ -10,6 +10,33 @@ const { createLogger } = require("../../core/logger");
 
 const log = createLogger("play");
 
+const TRACK_COMMENT_INSTRUCTION =
+	"You are a music-savvy Discord bot. You will receive a track title. " +
+	"Write a single short, witty one-liner comment (max 150 chars) about either " +
+	"the artist or the song — a fun fact, a hot take, or a vibe check. " +
+	"No quotes, no hashtags, no emojis. Just the comment text, nothing else.";
+
+/**
+ * Ask the LLM for a short comment about the track and edit it into the enqueued message.
+ *
+ * @param {import("discord.js").Message} enqueuedMessage - The "enqueued!" reply to edit
+ * @param {import("discord-player").Track} track
+ * @param {object} ctx - Shared context (llm)
+ */
+async function addTrackComment(enqueuedMessage, track, ctx) {
+	const comment = await ctx.llm.ask(
+		`Track: "${track.title}"${track.author ? ` by ${track.author}` : ""}`,
+		{ systemInstruction: TRACK_COMMENT_INSTRUCTION },
+	);
+
+	const trimmed = comment.trim().slice(0, 200);
+	if (!trimmed) return;
+
+	log.debug(`LLM track comment for "${track.title}": ${trimmed}`);
+
+	await enqueuedMessage.edit(`**${track.title}** enqueued!\n*${trimmed}*`);
+}
+
 module.exports = {
 	name: "play",
 	aliases: ["p"],
@@ -60,6 +87,14 @@ module.exports = {
 			}
 
 			log.info("Enqueued:", track.title, "| guild:", message.guild.id);
+
+			// If LLM is available, add a comment about the track (non-blocking)
+			if (ctx.llm) {
+				addTrackComment(enqueuedMessage, track, ctx).catch((err) =>
+					log.warn("LLM track comment failed:", err.message),
+				);
+			}
+
 			return enqueuedMessage;
 		} catch (e) {
 			log.error("Play failed:", e);
