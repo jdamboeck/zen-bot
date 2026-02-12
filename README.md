@@ -76,7 +76,7 @@ Do not commit `env.json`; it is listed in `.gitignore`.
 | `MUSIC_LEAVE_ON_END_COOLDOWN` | `30000` | Leave after queue ends (ms) |
 | `PO_TOKEN_URL` | `http://127.0.0.1:4416` | PO token provider URL |
 | `PO_TOKEN_TTL_HOURS` | `6` | Token cache duration |
-| `DB_PATH` | `zen-bot.db` | SQLite database file path |
+| `DB_PATH` | `data/zen-bot.db` | SQLite database file path |
 
 ### Discord Bot Setup
 

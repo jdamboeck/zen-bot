@@ -13,6 +13,8 @@
  * @module zen-bot/database/database
  */
 
+const fs = require("fs");
+const path = require("path");
 const Database = require("better-sqlite3");
 const { createLogger } = require("../core/logger");
 
@@ -20,9 +22,10 @@ const log = createLogger("database");
 
 /**
  * Database path - configurable via environment variable.
+ * Default: data/zen-bot.db (data/ is created if missing).
  * @type {string}
  */
-const dbPath = process.env.DB_PATH || "zen-bot.db";
+const dbPath = process.env.DB_PATH || "data/zen-bot.db";
 
 /**
  * The shared database connection.
@@ -36,6 +39,10 @@ let db = null;
  */
 function getConnection() {
 	if (!db) {
+		const dir = path.dirname(dbPath);
+		if (dir !== ".") {
+			fs.mkdirSync(dir, { recursive: true });
+		}
 		db = new Database(dbPath);
 		log.info(`Initialized SQLite database at ${dbPath}`);
 	}
