@@ -15,10 +15,10 @@ const log = createLogger("loader");
 /** Load order; later features can depend on ctx populated by earlier ones (e.g. core before music). */
 const FEATURE_ORDER = [
 	"core",
-	"music",
-	"moderation",
-	"music-stats",
-	"music-comments",
+	//"music",
+	//"moderation",
+	//"music-stats",
+	//"music-comments",
 ];
 
 /**
@@ -94,18 +94,24 @@ function wireEvents(ctx, handlers) {
 		});
 	}
 
-	// Wire player events
-	for (const [event, eventHandlers] of playerEvents) {
-		log.debug(`Wiring player event: ${event} (${eventHandlers.length} handlers)`);
-		ctx.player.events.on(event, async (...args) => {
-			for (const handler of eventHandlers) {
-				try {
-					await handler.handle(...args, ctx);
-				} catch (err) {
-					log.error(`Error in ${handler.feature}/${event}:`, err);
+	// Wire player events (only if player was created by a loaded feature, e.g. music)
+	if (!ctx.player) {
+		if (playerEvents.size > 0) {
+			log.warn(`Skipping ${playerEvents.size} player event handler(s): no player (music feature not loaded)`);
+		}
+	} else {
+		for (const [event, eventHandlers] of playerEvents) {
+			log.debug(`Wiring player event: ${event} (${eventHandlers.length} handlers)`);
+			ctx.player.events.on(event, async (...args) => {
+				for (const handler of eventHandlers) {
+					try {
+						await handler.handle(...args, ctx);
+					} catch (err) {
+						log.error(`Error in ${handler.feature}/${event}:`, err);
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 }
 
