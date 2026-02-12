@@ -15,10 +15,10 @@ const log = createLogger("loader");
 /** Load order; later features can depend on ctx populated by earlier ones (e.g. core before music). */
 const FEATURE_ORDER = [
 	"core",
-	//"music",
-	//"moderation",
-	//"music-stats",
-	//"music-comments",
+	"music",
+	"moderation",
+	"music-stats",
+	"music-comments",
 ];
 
 /**
@@ -132,6 +132,8 @@ async function start() {
 		services: {},
 		config: null,
 		musicConfig: null,
+		/** Feature names that are enabled (from FEATURE_ORDER). Used by command loader and help. */
+		enabledFeatures: [...FEATURE_ORDER],
 	};
 
 	const zenBotDir = __dirname;
