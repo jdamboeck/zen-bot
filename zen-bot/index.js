@@ -16,6 +16,7 @@ const log = createLogger("loader");
 const FEATURE_ORDER = [
 	"core",
 	"database",
+	"llm",
 	"music",
 	"moderation",
 	"music-stats",
