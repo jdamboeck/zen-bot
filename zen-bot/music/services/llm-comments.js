@@ -93,7 +93,13 @@ function startPeriodicComments(guildId, enqueuedMessage, track, ctx) {
 					result = firstLine + "\n" + allComments[allComments.length - 1];
 				}
 				newContent = result;
-				log.debug("Truncated enqueued message to fit Discord limit");
+				// Hard cap: first line or a single comment can exceed limit (e.g. very long title)
+				if (newContent.length > MAX_MESSAGE_LENGTH) {
+					newContent = newContent.slice(0, MAX_MESSAGE_LENGTH);
+					log.debug("Truncated enqueued message (hard cap) to fit Discord limit");
+				} else {
+					log.debug("Truncated enqueued message to fit Discord limit");
+				}
 			}
 			await enqueuedMessage.edit(newContent);
 		} catch (err) {
