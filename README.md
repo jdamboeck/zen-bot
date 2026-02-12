@@ -76,7 +76,13 @@ Optional: LLM features (#ask, AI track comments) use environment variables `LLM_
 | `LLM_GEMINI_API_KEY` | — | Gemini API key for #ask and track comments (optional) |
 | `LLM_BOT_CHARACTER` | (in-code default) | Bot personality for all LLM replies (optional) |
 | `LLM_MODEL` | `gemini-3-flash-preview` | Gemini model name (optional) |
+| `LLM_ASK_MAX_RESPONSE_LENGTH` | `1900` | Max length for #ask reply before truncation (optional) |
+| `LLM_ASK_APPEND_INSTRUCTION` | (in-code default) | Task instruction appended for #ask (optional) |
 | `MUSIC_VOLUME` | `80` | Default playback volume (0-100) |
+| `MUSIC_LLM_COMMENT_INTERVAL_MS` | `120000` | Interval between AI track comments (ms) (optional) |
+| `MUSIC_LLM_MESSAGE_MAX_LENGTH` | `1950` | Max length for enqueued message when appending comments (optional) |
+| `MUSIC_LLM_SINGLE_COMMENT_MAX_CHARS` | `200` | Max chars for a single AI track comment (optional) |
+| `MUSIC_LLM_TRACK_COMMENT_INSTRUCTION` | (in-code default) | LLM instruction for track comments (optional) |
 | `MUSIC_LEAVE_ON_EMPTY_COOLDOWN` | `30000` | Leave empty channel after (ms) |
 | `MUSIC_LEAVE_ON_END_COOLDOWN` | `30000` | Leave after queue ends (ms) |
 | `PO_TOKEN_URL` | `http://127.0.0.1:4416` | PO token provider URL |
