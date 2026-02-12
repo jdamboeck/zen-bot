@@ -123,6 +123,7 @@ Default prefix: `#`
 |---------|---------|-------------|
 | `#play <query>` | `#p` | Play a track (URL or search term) |
 | `#stop` | — | Stop playback and clear queue |
+| `#skip` | — | Skip the currently playing track |
 | `#pause` | — | Pause playback |
 | `#resume` | — | Resume playback |
 | `#musicstats` | — | Show play statistics |
