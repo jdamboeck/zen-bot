@@ -27,7 +27,11 @@ async function init(ctx) {
 	}
 
 	log.info("Initializing LLM...");
-	ctx.llm = createLlmContext(apiKey);
+	const options = {};
+	if (ctx.config?.botCharacter) {
+		options.botCharacter = ctx.config.botCharacter;
+	}
+	ctx.llm = createLlmContext(apiKey, options);
 	log.info("LLM initialized (ctx.llm available)");
 }
 

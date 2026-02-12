@@ -36,23 +36,56 @@ const log = createLogger("llm");
 const DEFAULT_MODEL = "gemini-3-flash-preview";
 
 /**
+ * Default bot character template. Customize this to change the bot's personality
+ * across all LLM interactions. This is prepended to all system instructions.
+ *
+ * You can override this by:
+ * 1. Setting BOT_CHARACTER env var
+ * 2. Adding botCharacter to env.json
+ * 3. Passing a custom systemInstruction in opts (which replaces this)
+ *
+ * @type {string}
+ */
+let envJson = {};
+try {
+	envJson = require("../../env.json");
+} catch (e) {
+	// env.json might not exist, that's okay
+}
+
+const DEFAULT_BOT_CHARACTER =
+	process.env.BOT_CHARACTER ||
+	envJson.botCharacter ||
+	"You are a depressive, witty self deprecating Music Critic. You're knowledgeable, wise-ass, " +
+	"and have a dark sense of humor. Keep responses concise and funny but nevver enthusiastic. Keep the emojo usage dark and sarcastic. " +
+	"Use Discord-friendly markdown formatting (bold, italic, code blocks).";
+
+/**
  * Create the LLM context object that gets attached to ctx.llm.
  *
  * @param {string} apiKey - Gemini API key
  * @param {object} [options]
  * @param {string} [options.model] - Model name override (default: gemini-3-flash-preview)
+ * @param {string} [options.botCharacter] - Bot character template override
  * @returns {object} LLM context object
  */
 function createLlmContext(apiKey, options = {}) {
 	const modelName = options.model || DEFAULT_MODEL;
+	const botCharacter = options.botCharacter || DEFAULT_BOT_CHARACTER;
 	const genAI = new GoogleGenerativeAI(apiKey);
 	const model = genAI.getGenerativeModel({ model: modelName });
 
 	log.info(`Gemini model ready: ${modelName}`);
+	if (botCharacter !== DEFAULT_BOT_CHARACTER) {
+		log.debug("Using custom bot character template");
+	}
 
 	const llmContext = {
 		/** The model name in use. */
 		modelName,
+
+		/** The bot character template being used. */
+		botCharacter,
 
 		/** The raw GenerativeModel instance for advanced use. */
 		model,
@@ -72,10 +105,12 @@ function createLlmContext(apiKey, options = {}) {
 
 		/**
 		 * Simple question → answer helper. Wraps generate() with sensible defaults.
+		 * Automatically applies the bot character template unless overridden.
 		 *
 		 * @param {string} prompt - The user prompt / question
 		 * @param {object} [opts]
-		 * @param {string} [opts.systemInstruction] - Optional system instruction text
+		 * @param {string} [opts.systemInstruction] - Optional system instruction text (replaces bot character if provided)
+		 * @param {boolean} [opts.useCharacter=true] - Whether to prepend bot character (ignored if systemInstruction provided)
 		 * @returns {Promise<string>} The text response
 		 */
 		async ask(prompt, opts = {}) {
@@ -85,9 +120,15 @@ function createLlmContext(apiKey, options = {}) {
 				],
 			};
 
-			if (opts.systemInstruction) {
+			// Build system instruction: use provided one, or combine bot character with task-specific instruction
+			let systemInstruction = opts.systemInstruction;
+			if (!systemInstruction && opts.useCharacter !== false) {
+				systemInstruction = botCharacter;
+			}
+
+			if (systemInstruction) {
 				request.systemInstruction = {
-					parts: [{ text: opts.systemInstruction }],
+					parts: [{ text: systemInstruction }],
 				};
 			}
 
