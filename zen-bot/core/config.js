@@ -1,30 +1,30 @@
 /**
- * Core configuration — bot token and command prefix.
+ * Core configuration — bot token, command prefix, and API keys.
  * Loads from environment variables first, then falls back to env.json.
  *
  * @module zen-bot/core/config
  */
 
-let botToken = process.env.BOT_TOKEN;
-if (!botToken) {
-	try {
-		botToken = require("../../env.json").botToken;
-	} catch (e) {
-		if (e.code === "MODULE_NOT_FOUND" || e.message?.includes("JSON")) {
-			console.error("Missing or invalid env.json. Copy env.example.json to env.json and set your botToken (or set BOT_TOKEN env var).");
-			process.exit(1);
-		}
-		throw e;
-	}
+let envJson = {};
+try {
+	envJson = require("../../env.json");
+} catch (e) {
+	if (e.code !== "MODULE_NOT_FOUND" && !e.message?.includes("JSON")) throw e;
 }
+
+const botToken = process.env.BOT_TOKEN || envJson.botToken;
 if (!botToken) {
-	console.error("env.json must contain botToken (or set BOT_TOKEN env var).");
+	console.error("Missing botToken. Set BOT_TOKEN env var or add botToken to env.json (copy env.example.json).");
 	process.exit(1);
 }
 
-/** @type {{ botToken: string, prefix: string }} */
+/** Gemini API key (optional — needed for #ask command). */
+const geminiApiKey = process.env.GEMINI_API_KEY || envJson.geminiApiKey || null;
+
+/** @type {{ botToken: string, prefix: string, geminiApiKey: string|null }} */
 module.exports = {
 	botToken,
 	/** Command prefix (e.g. "#"). Override with PREFIX env. */
 	prefix: process.env.PREFIX || "#",
+	geminiApiKey,
 };
