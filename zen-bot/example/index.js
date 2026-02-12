@@ -110,7 +110,7 @@ async function init(ctx) {
 	// Perform any one-time setup your feature needs
 
 	// Example: Log when the bot is ready
-	ctx.client.once("ready", () => {
+	ctx.client.once("clientReady", () => {
 		log.info(`Example feature active! Greeting: "${config.greeting}"`);
 	});
 
