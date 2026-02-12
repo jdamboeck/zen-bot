@@ -18,17 +18,9 @@ if (!botToken) {
 	process.exit(1);
 }
 
-/** Gemini API key (optional — needed for #ask command). */
-const geminiApiKey = process.env.GEMINI_API_KEY || envJson.geminiApiKey || null;
-
-/** Bot character template (optional — customizes LLM personality). */
-const botCharacter = process.env.BOT_CHARACTER || envJson.botCharacter || null;
-
-/** @type {{ botToken: string, prefix: string, geminiApiKey: string|null, botCharacter: string|null }} */
+/** @type {{ botToken: string, prefix: string }} */
 module.exports = {
 	botToken,
 	/** Command prefix (e.g. "#"). Override with PREFIX env. */
 	prefix: process.env.PREFIX || "#",
-	geminiApiKey,
-	botCharacter,
 };
