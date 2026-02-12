@@ -12,5 +12,6 @@ po-provider.pid
 # Python cache
 **/__pycache__/**
 
-# Database files
+# Database and runtime data
+data/
 *.db
