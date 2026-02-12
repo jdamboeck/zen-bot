@@ -29,20 +29,16 @@
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { createLogger } = require("../core/logger");
+const config = require("./config");
 
 const log = createLogger("llm");
 
 /** Default model to use. */
 const DEFAULT_MODEL = "gemini-3-flash-preview";
 
-/** Fallback bot character when options.botCharacter is not provided (e.g. createLlmContext called without options). */
-const DEFAULT_BOT_CHARACTER =
-	"You are a depressive, witty self deprecating Music Critic. You're knowledgeable, wise-ass, " +
-	"and have a dark sense of humor. Keep responses concise and funny but never enthusiastic. Keep the emoji usage dark and sarcastic. " +
-	"Use Discord-friendly markdown formatting (bold, italic, code blocks).";
-
 /**
  * Create the LLM context object that gets attached to ctx.llm.
+ * Bot character: options.botCharacter, or config.botCharacter (single source in config.js).
  *
  * @param {string} apiKey - Gemini API key
  * @param {object} [options]
@@ -52,7 +48,7 @@ const DEFAULT_BOT_CHARACTER =
  */
 function createLlmContext(apiKey, options = {}) {
 	const modelName = options.model || DEFAULT_MODEL;
-	const botCharacter = options.botCharacter || DEFAULT_BOT_CHARACTER;
+	const botCharacter = options.botCharacter ?? config.botCharacter;
 	const genAI = new GoogleGenerativeAI(apiKey);
 	const model = genAI.getGenerativeModel({ model: modelName });
 
