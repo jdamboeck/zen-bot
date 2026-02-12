@@ -17,8 +17,11 @@ const COMMENT_INTERVAL_MS = 2 * 60 * 1000;
 /** Map of guildId -> interval ID for active comment intervals. */
 const activeIntervals = new Map();
 
+/** Discord message length limit. Use a safe cap to avoid failed edits. */
+const MAX_MESSAGE_LENGTH = 1950;
+
 /**
- * Track comment instruction — asks for a new fact/comment about the track.
+ * Track comment instruction — shared by play.js (first comment) and periodic comments.
  */
 const TRACK_COMMENT_INSTRUCTION =
 	"Write a single short, witty one-liner comment (max 150 chars) about either " +
@@ -61,9 +64,7 @@ function startPeriodicComments(guildId, enqueuedMessage, track, ctx) {
 			// Generate a new comment
 			const comment = await ctx.llm.ask(
 				`Track: "${track.title}"${track.author ? ` by ${track.author}` : ""}`,
-				{
-					systemInstruction: `${ctx.llm.botCharacter}\n\n${TRACK_COMMENT_INSTRUCTION}`,
-				},
+				{ appendInstruction: TRACK_COMMENT_INSTRUCTION },
 			);
 
 			const trimmed = comment.trim().slice(0, 200);
@@ -74,10 +75,27 @@ function startPeriodicComments(guildId, enqueuedMessage, track, ctx) {
 
 			log.debug(`Periodic comment for "${track.title}": ${trimmed}`);
 
-			// Append the new comment to the message
-			// If message already has comments, add a newline before the new one
-			const separator = currentContent.includes("*") ? "\n" : "\n";
-			await enqueuedMessage.edit(`${currentContent}${separator}*${trimmed}*`);
+			let newContent = `${currentContent}\n*${trimmed}*`;
+			if (newContent.length > MAX_MESSAGE_LENGTH) {
+				const lines = currentContent.split("\n");
+				const firstLine = lines[0] || currentContent;
+				const oldCommentLines = lines.slice(1);
+				const allComments = [...oldCommentLines, `*${trimmed}*`];
+				let result = firstLine;
+				for (let i = allComments.length - 1; i >= 0; i--) {
+					const candidate = firstLine + "\n" + allComments.slice(i).join("\n");
+					if (candidate.length <= MAX_MESSAGE_LENGTH) {
+						result = candidate;
+						break;
+					}
+				}
+				if (result === firstLine && allComments.length > 0) {
+					result = firstLine + "\n" + allComments[allComments.length - 1];
+				}
+				newContent = result;
+				log.debug("Truncated enqueued message to fit Discord limit");
+			}
+			await enqueuedMessage.edit(newContent);
 		} catch (err) {
 			log.warn("Failed to generate periodic comment:", err.message);
 			// Don't stop the interval on error, just log and continue
@@ -119,4 +137,5 @@ module.exports = {
 	stopPeriodicComments,
 	stopAllPeriodicComments,
 	COMMENT_INTERVAL_MS,
+	TRACK_COMMENT_INSTRUCTION,
 };

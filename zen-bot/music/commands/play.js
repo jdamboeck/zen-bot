@@ -7,13 +7,9 @@
 
 const { useQueue } = require("discord-player");
 const { createLogger } = require("../../core/logger");
+const { TRACK_COMMENT_INSTRUCTION } = require("../services/llm-comments");
 
 const log = createLogger("play");
-
-const TRACK_COMMENT_INSTRUCTION =
-	"You will receive a track title. Write a single short, witty one-liner comment " +
-	"(max 150 chars) about either the artist or the song — a fun fact, a hot take, or a vibe check. " +
-	"No quotes, no hashtags, no emojis. Just the comment text, nothing else.";
 
 /**
  * Ask the LLM for a short comment about the track and edit it into the enqueued message.
@@ -25,10 +21,7 @@ const TRACK_COMMENT_INSTRUCTION =
 async function addTrackComment(enqueuedMessage, track, ctx) {
 	const comment = await ctx.llm.ask(
 		`Track: "${track.title}"${track.author ? ` by ${track.author}` : ""}`,
-		{
-			// Combine bot character with track-specific instruction
-			systemInstruction: `${ctx.llm.botCharacter}\n\n${TRACK_COMMENT_INSTRUCTION}`,
-		},
+		{ appendInstruction: TRACK_COMMENT_INSTRUCTION },
 	);
 
 	const trimmed = comment.trim().slice(0, 200);
