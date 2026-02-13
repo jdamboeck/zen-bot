@@ -26,11 +26,6 @@ const PLAYBACK_THREAD_NAME = "Comments";
 const MAX_COMMENT_LENGTH = 200;
 
 /**
- * Command prefix - replies starting with this are not recorded as comments.
- */
-const COMMAND_PREFIX = "#";
-
-/**
  * Truncate text to maxLength (per line); URLs are left untruncated.
  *
  * @param {string} text
@@ -393,7 +388,8 @@ async function handleReactionAdd(reaction, user, ctx) {
  */
 function handlePotentialReply(message, ctx) {
 	if (message.author.bot) return false;
-	if (message.content.startsWith(COMMAND_PREFIX)) return false;
+	const prefix = ctx.config?.prefix ?? "#";
+	if (message.content.startsWith(prefix)) return false;
 	if (!message.reference?.messageId) return false;
 
 	const guildId = message.guild?.id;
