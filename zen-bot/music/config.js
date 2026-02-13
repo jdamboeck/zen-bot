@@ -28,7 +28,7 @@ module.exports = {
 	poTokenRetryDelay: parseInt(process.env.PO_TOKEN_RETRY_DELAY) || 2000,
 
 	/** Interval between LLM track comments (ms). Env: MUSIC_LLM_COMMENT_INTERVAL_MS */
-	llmCommentIntervalMs: parseInt(process.env.MUSIC_LLM_COMMENT_INTERVAL_MS, 10) || 120000,
+	llmCommentIntervalMs: parseInt(process.env.MUSIC_LLM_COMMENT_INTERVAL_MS, 10) || 200000,
 	/** Max length for enqueued message when appending comments. Env: MUSIC_LLM_MESSAGE_MAX_LENGTH */
 	llmEnqueuedMessageMaxLength: parseInt(process.env.MUSIC_LLM_MESSAGE_MAX_LENGTH, 10) || 1950,
 	/** Max chars for a single LLM track comment. Env: MUSIC_LLM_SINGLE_COMMENT_MAX_CHARS */
