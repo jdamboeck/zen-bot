@@ -19,6 +19,12 @@ const log = createLogger("music-stats");
 async function init(ctx) {
 	log.info("Initializing music-stats...");
 
+	if (!ctx.db) {
+		const msg = "music-stats expects ctx.db; ensure database is in FEATURE_ORDER before music-stats.";
+		log.error(msg);
+		throw new Error(msg);
+	}
+
 	// Register the 'music' database namespace
 	// This makes all music database functions available at ctx.db.music
 	ctx.db.register("music", initMusicDatabase);
