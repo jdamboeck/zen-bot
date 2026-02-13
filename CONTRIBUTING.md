@@ -227,6 +227,8 @@ module.exports = {
 };
 ```
 
+**Target is required.** Set `target` to `"client"` for Discord.js events or `"player"` for discord-player events. If `target` is missing or invalid, the loader defaults to `"client"` and logs a warning.
+
 ### Client Events (Discord.js)
 
 Target: `"client"`
@@ -260,6 +262,8 @@ Example: `playerStart` is handled by:
 ## Configuration
 
 Feature configuration uses a simple pattern: defaults with environment variable overrides.
+
+The loader reads `process.env`; core also falls back to `env.json` in the project root. Use **env.example.json** as the canonical list of variables—copy it to `env.json` for local secrets. If you use a dotenv-based workflow, `.env.example` may duplicate that list; keep one as the source of truth to avoid drift.
 
 ### Create `config.js`
 
@@ -348,6 +352,8 @@ async function init(ctx) {
   ctx.services.myFeature = services;
 }
 ```
+
+**Two patterns are valid:** (1) Expose a shaped object with the public methods your feature provides (e.g. `ctx.services.myFeature = { doSomething, getCount }`). (2) Expose the whole service module (e.g. `ctx.services.myFeature = require("./services")`). If your service needs `ctx` at startup (e.g. to call other features), call an `init(ctx)` on the service before exposing it.
 
 ### Using Services from Other Features
 

@@ -43,10 +43,17 @@ function collectEventHandlers(featurePath, featureName) {
 		try {
 			const handler = require(path.join(eventsDir, file));
 			if (handler.event && handler.handle) {
-				handlers.push({
+				const entry = {
 					...handler,
 					feature: featureName,
-				});
+				};
+				if (entry.target !== "client" && entry.target !== "player") {
+					log.warn(
+						`Event handler ${featureName}/events/${file}: missing or invalid target (got "${entry.target}"), defaulting to "client"`
+					);
+					entry.target = "client";
+				}
+				handlers.push(entry);
 				log.debug(`Collected event handler: ${featureName}/${handler.event}`);
 			}
 		} catch (err) {
