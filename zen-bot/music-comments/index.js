@@ -20,6 +20,12 @@ const log = createLogger("music-comments");
 async function init(ctx) {
 	log.info("Initializing music-comments...");
 
+	if (!ctx.db?.music) {
+		const msg = "music-comments expects ctx.db.music; ensure music-stats is in FEATURE_ORDER before music-comments.";
+		log.error(msg);
+		throw new Error(msg);
+	}
+
 	// Export services for other features
 	ctx.services.comments = services;
 
