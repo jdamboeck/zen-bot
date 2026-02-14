@@ -61,19 +61,16 @@ module.exports = { init };
 
 ### 2. Configuration (`config.js`)
 
+Use `get(envKey, default, { type })` from `../core/config` so settings come from env vars or env.json (keys = ENV names). Types: `'string'`, `'int'`, `'bool'`, `'array'`, `'serviceList'`.
+
 ```javascript
+const { get } = require("../core/config");
+
 module.exports = {
-    // String with env override
-    setting: process.env.MY_SETTING || "default",
-
-    // Number with env override
-    timeout: parseInt(process.env.MY_TIMEOUT, 10) || 5000,
-
-    // Boolean (default true, disable with "false")
-    enabled: process.env.MY_ENABLED !== "false",
-
-    // Array from comma-separated env
-    items: process.env.MY_ITEMS?.split(",") || ["a", "b", "c"],
+    setting: get("MY_SETTING", "default"),
+    timeout: get("MY_TIMEOUT", 5000, { type: "int" }),
+    enabled: get("MY_ENABLED", true, { type: "bool" }),
+    items: get("MY_ITEMS", ["a", "b", "c"], { type: "array" }),
 };
 ```
 

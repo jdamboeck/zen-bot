@@ -55,14 +55,14 @@ The custom `YtDlpExtractor` in `zen-bot/music/extractor.js`:
 
 ## Configuration
 
-Environment variables (with defaults):
+These can be set via environment variables or in `env.json` (keys = ENV names; env vars take precedence). See `env.example.json`.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PO_TOKEN_URL` | `http://127.0.0.1:4416` | Provider server URL |
 | `PO_TOKEN_TTL_HOURS` | `6` | Token cache duration |
 | `PO_TOKEN_RETRIES` | `3` | Retry attempts on failure |
-| `PO_TOKEN_RETRY_DELAY` | `1000` | Initial retry delay (ms) |
+| `PO_TOKEN_RETRY_DELAY` | `2000` | Ms between retries |
 
 ## Usage
 
@@ -131,14 +131,14 @@ npx tsc
 
 - Ensure provider is running on the configured port
 - Check firewall settings
-- Verify `PO_TOKEN_URL` environment variable
+- Verify `PO_TOKEN_URL` (env var or in `env.json`)
 
 ### Debug Logging
 
 Enable debug logging to see token fetching:
 
 ```bash
-LOG_LEVEL=debug npm start
+`LOG_LEVEL=debug npm start` (or set `LOG_LEVEL` in `env.json`)
 ```
 
 Look for `[po-token]` log entries.
