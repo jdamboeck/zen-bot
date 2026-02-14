@@ -4,6 +4,7 @@ node_modules/
 
 # Third-party (yt-dlp binary, plugins, bgutil-ytdlp-pot-provider clone)
 third_party/
+third_party/logs/
 
 // Environment files
 env.json
