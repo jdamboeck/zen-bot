@@ -73,6 +73,8 @@ Optional: LLM features (#ask, AI track comments) use environment variables `LLM_
 | `BOT_TOKEN` | — | Discord bot token (required) |
 | `PREFIX` | `#` | Command prefix |
 | `LOG_LEVEL` | `debug` | Logging level: debug, info, warn, error |
+| `LOG_EXCLUDE_SERVICES` | (empty) | Comma-separated logger service names to hide |
+| `LOG_INCLUDE_SERVICES` | (empty) | Comma-separated logger service names to show (when set, only these log) |
 | `LLM_GEMINI_API_KEY` | — | Gemini API key for #ask and track comments (optional) |
 | `LLM_BOT_CHARACTER` | (in-code default) | Bot personality for all LLM replies (optional) |
 | `LLM_MODEL` | `gemini-3-flash-preview` | Gemini model name (optional) |
