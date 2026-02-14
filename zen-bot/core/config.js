@@ -18,9 +18,25 @@ if (!botToken) {
 	process.exit(1);
 }
 
-/** @type {{ botToken: string, prefix: string }} */
+/** Normalize env or env.json value to array of trimmed non-empty service names (string or array accepted). */
+function toServiceList(v) {
+	if (v == null) return [];
+	return Array.isArray(v)
+		? v.map((s) => String(s).trim()).filter(Boolean)
+		: String(v).split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+/** Service names to exclude from log output. Override with LOG_EXCLUDE_SERVICES env. */
+const logExcludeServices = toServiceList(process.env.LOG_EXCLUDE_SERVICES ?? envJson.logExcludeServices);
+
+/** Service names to include (only these log when non-empty). Override with LOG_INCLUDE_SERVICES env. */
+const logIncludeServices = toServiceList(process.env.LOG_INCLUDE_SERVICES ?? envJson.logIncludeServices);
+
+/** @type {{ botToken: string, prefix: string, logExcludeServices: string[], logIncludeServices: string[] }} */
 module.exports = {
 	botToken,
 	/** Command prefix (e.g. "#"). Override with PREFIX env. */
 	prefix: process.env.PREFIX || "#",
+	logExcludeServices,
+	logIncludeServices,
 };
