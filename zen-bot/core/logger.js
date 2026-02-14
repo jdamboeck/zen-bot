@@ -1,13 +1,13 @@
 /**
  * Logger factory — prefixed console logging with level filtering.
- * Level from LOG_LEVEL env; service exclude/include from core config (overridable by LOG_EXCLUDE_SERVICES / LOG_INCLUDE_SERVICES).
+ * Level and service lists from core config (get() reads LOG_LEVEL, LOG_EXCLUDE_SERVICES, LOG_INCLUDE_SERVICES from env or env.json).
  *
- * Environment variables:
+ * Environment / env.json (keys = ENV names):
  * - LOG_LEVEL: "debug" | "info" | "warn" | "error" (default: debug)
  * - LOG_TIMESTAMP: "1" or "true" to show ms-since-start in prefix for all levels (default: only in debug)
  * - NO_COLOR: set (any value) to disable ANSI colors for service name and timestamp
- * - LOG_EXCLUDE_SERVICES: comma-separated service names to exclude (overrides config.logExcludeServices)
- * - LOG_INCLUDE_SERVICES: comma-separated service names to include; when set, only these log (overrides config.logIncludeServices)
+ * - LOG_EXCLUDE_SERVICES: comma-separated service names to exclude
+ * - LOG_INCLUDE_SERVICES: comma-separated service names to include; when set, only these log
  *
  * Output format: [name..... [ <ms> [ message (green for [name....], blue for ms; " [ " as separator).
  * Service name is padded with dots or truncated to a fixed width of 12 chars so all lines align from the first log.
@@ -16,9 +16,12 @@
  * @module zen-bot/core/logger
  */
 
+const config = require("./config");
+
 /** @type {Record<string, number>} */
 const LOG_LEVELS = { debug: 0, info: 1, warn: 2, error: 3 };
-const currentLevel = LOG_LEVELS[process.env.LOG_LEVEL?.toLowerCase()] ?? LOG_LEVELS.debug;
+const logLevelRaw = config.get("LOG_LEVEL", "debug");
+const currentLevel = LOG_LEVELS[String(logLevelRaw).toLowerCase()] ?? LOG_LEVELS.debug;
 
 /** [level name, min level value, console method]. Used to generate debug/info/warn/error. */
 const LEVEL_METHODS = [
@@ -27,17 +30,16 @@ const LEVEL_METHODS = [
 	["warn", LOG_LEVELS.warn, "warn"],
 	["error", LOG_LEVELS.error, "error"],
 ];
-const logTimestamp = process.env.LOG_TIMESTAMP === "1" || process.env.LOG_TIMESTAMP === "true";
-const noColor = process.env.NO_COLOR != null && process.env.NO_COLOR !== "";
+const logTimestamp = config.get("LOG_TIMESTAMP", false, { type: "bool" });
+const noColor = Boolean(config.get("NO_COLOR", ""));
 
 const C = noColor
 	? { green: "", blue: "", reset: "" }
 	: { green: "\x1b[32m", blue: "\x1b[34m", reset: "\x1b[0m" };
 
-const config = require("./config");
-/** Service names to exclude from log output (from config, overridable by LOG_EXCLUDE_SERVICES). */
+/** Service names to exclude from log output (from config). */
 const excludedServices = new Set(config.logExcludeServices || []);
-/** When non-empty, only these service names log (from config, overridable by LOG_INCLUDE_SERVICES). */
+/** When non-empty, only these service names log (from config, env or env.json). */
 const includedServices = new Set(config.logIncludeServices || []);
 
 /** High-resolution time at logger module load (for sub-ms timestamps). */

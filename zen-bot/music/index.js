@@ -8,6 +8,7 @@
 const { Player } = require("discord-player");
 const { DefaultExtractors } = require("@discord-player/extractor");
 const { createLogger } = require("../core/logger");
+const { get } = require("../core/config");
 const { YtDlpExtractor } = require("./extractor");
 const config = require("./config");
 
@@ -43,7 +44,7 @@ async function init(ctx) {
 	// Store config for commands
 	ctx.musicConfig = config;
 
-	if (process.env.LOG_LEVEL?.toLowerCase() === "debug") {
+	if (String(get("LOG_LEVEL", "debug")).toLowerCase() === "debug") {
 		const { startPotProviderLogTail } = require("./pot-provider-log-tail");
 		startPotProviderLogTail();
 	}

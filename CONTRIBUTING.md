@@ -263,24 +263,22 @@ Example: `playerStart` is handled by:
 
 Feature configuration uses a simple pattern: defaults with environment variable overrides.
 
-The loader reads `process.env`; core also falls back to `env.json` in the project root. Use **env.example.json** as the canonical list of variables—copy it to `env.json` for local secrets. If you use a dotenv-based workflow, `.env.example` may duplicate that list; keep one as the source of truth to avoid drift.
+Config is loaded via **dotenv-json** (env.json in the project root) and **process.env**. dotenv-json does not overwrite existing environment variables, so env vars always take precedence. Keys in **env.json** must match ENV names (e.g. `BOT_TOKEN`, `PREFIX`, `LOG_LEVEL`). Use **env.example.json** as the canonical list—copy it to `env.json` for local secrets. If you use a dotenv-based workflow, `.env.example` may duplicate that list; keep one as the source of truth to avoid drift.
 
 ### Create `config.js`
 
+Use `get(envKey, default, { type })` from `../core/config` so your feature reads from both env vars and env.json (keys = ENV names). Types: `'string'`, `'int'`, `'bool'`, `'array'`, `'serviceList'`.
+
 ```javascript
 /**
- * My Feature configuration.
+ * My Feature configuration. Keys in env.json must match ENV names (e.g. MY_FEATURE_SETTING).
  */
+const { get } = require("../core/config");
 
 module.exports = {
-  // Simple default with env override
-  someSetting: process.env.MY_FEATURE_SETTING || "default_value",
-
-  // Numeric setting
-  timeout: parseInt(process.env.MY_FEATURE_TIMEOUT, 10) || 5000,
-
-  // Boolean setting
-  enabled: process.env.MY_FEATURE_ENABLED !== "false",
+  someSetting: get("MY_FEATURE_SETTING", "default_value"),
+  timeout: get("MY_FEATURE_TIMEOUT", 5000, { type: "int" }),
+  enabled: get("MY_FEATURE_ENABLED", true, { type: "bool" }),
 };
 ```
 
@@ -314,7 +312,7 @@ log.error("Error occurred", error);
 
 ### Log Levels
 
-Controlled by `LOG_LEVEL` environment variable (default: `debug`):
+Controlled by `LOG_LEVEL` (env var or env.json key; default: `debug`):
 - `debug` - All messages (default; use for actions and status changes)
 - `info` - Notable events (command executed, feature initialized, etc.)
 - `warn` - Recoverable issues (fallbacks, retries)

@@ -16,16 +16,16 @@
 const fs = require("fs");
 const path = require("path");
 const Database = require("better-sqlite3");
+const { get } = require("../core/config");
 const { createLogger } = require("../core/logger");
 
 const log = createLogger("database");
 
 /**
- * Database path - configurable via environment variable.
- * Default: data/zen-bot.db (data/ is created if missing).
+ * Database path - configurable via DB_PATH (env or env.json). Default: data/zen-bot.db (data/ is created if missing).
  * @type {string}
  */
-const dbPath = process.env.DB_PATH || "data/zen-bot.db";
+const dbPath = get("DB_PATH", "data/zen-bot.db");
 
 /**
  * The shared database connection.

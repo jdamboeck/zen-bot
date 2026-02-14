@@ -54,17 +54,20 @@ Configure your bot token (see [Configuration](#configuration)), then run zen-bot
 Use either:
 
 - **Environment variable:** `BOT_TOKEN=your_token_here`
-- **File:** Copy `env.example.json` to `env.json` and set `botToken`:
+- **File:** Copy `env.example.json` to `env.json` and set `BOT_TOKEN` (and optionally `PREFIX`). Keys in `env.json` must match ENV names (e.g. `BOT_TOKEN`, `PREFIX`). Environment variables take precedence (dotenv-json does not overwrite `process.env`).
 
   ```json
   {
-    "botToken": "YOUR_DISCORD_BOT_TOKEN_HERE"
+    "BOT_TOKEN": "YOUR_DISCORD_BOT_TOKEN_HERE",
+    "PREFIX": "#"
   }
   ```
 
 Do not commit `env.json`; it is listed in `.gitignore`.
 
-Optional: LLM features (#ask, AI track comments) use environment variables `LLM_GEMINI_API_KEY`, `LLM_BOT_CHARACTER`, and `LLM_MODEL` — see the table below.
+Optional: LLM features (#ask, AI track comments) use `LLM_GEMINI_API_KEY`, `LLM_BOT_CHARACTER`, and `LLM_MODEL` — see the table below.
+
+All variables below can also be set in `env.json` (keys must match ENV names); environment variables take precedence (dotenv-json does not overwrite `process.env`).
 
 ### Environment Variables
 
@@ -73,6 +76,8 @@ Optional: LLM features (#ask, AI track comments) use environment variables `LLM_
 | `BOT_TOKEN` | — | Discord bot token (required) |
 | `PREFIX` | `#` | Command prefix |
 | `LOG_LEVEL` | `debug` | Logging level: debug, info, warn, error |
+| `LOG_TIMESTAMP` | (empty) | Set to `1` or `true` to show ms-since-start in log prefix for all levels |
+| `NO_COLOR` | (empty) | Set to any value to disable ANSI colors in log output |
 | `LOG_EXCLUDE_SERVICES` | (empty) | Comma-separated logger service names to hide |
 | `LOG_INCLUDE_SERVICES` | (empty) | Comma-separated logger service names to show (when set, only these log) |
 | `LLM_GEMINI_API_KEY` | — | Gemini API key for #ask and track comments (optional) |
@@ -80,15 +85,16 @@ Optional: LLM features (#ask, AI track comments) use environment variables `LLM_
 | `LLM_MODEL` | `gemini-3-flash-preview` | Gemini model name (optional) |
 | `LLM_ASK_MAX_RESPONSE_LENGTH` | `1900` | Max length for #ask reply before truncation (optional) |
 | `LLM_ASK_APPEND_INSTRUCTION` | (in-code default) | Task instruction appended for #ask (optional) |
-| `MUSIC_VOLUME` | `80` | Default playback volume (0-100) |
-| `MUSIC_LLM_COMMENT_INTERVAL_MS` | `120000` | Interval between AI track comments (ms) (optional) |
+| `MUSIC_VOLUME` | `50` | Default playback volume (0-100) |
+| `MUSIC_LLM_COMMENT_INTERVAL_MS` | `200000` | Interval between AI track comments (ms) (optional) |
 | `MUSIC_LLM_MESSAGE_MAX_LENGTH` | `1950` | Max length for enqueued message when appending comments (optional) |
 | `MUSIC_LLM_SINGLE_COMMENT_MAX_CHARS` | `200` | Max chars for a single AI track comment (optional) |
 | `MUSIC_LLM_TRACK_COMMENT_INSTRUCTION` | (in-code default) | LLM instruction for track comments (optional) |
-| `MUSIC_LEAVE_ON_EMPTY_COOLDOWN` | `30000` | Leave empty channel after (ms) |
-| `MUSIC_LEAVE_ON_END_COOLDOWN` | `30000` | Leave after queue ends (ms) |
+| `MUSIC_LEAVE_TIMEOUT` | `60000` | Ms to wait in empty queue or after last track before leaving |
 | `PO_TOKEN_URL` | `http://127.0.0.1:4416` | PO token provider URL |
 | `PO_TOKEN_TTL_HOURS` | `6` | Token cache duration |
+| `PO_TOKEN_RETRIES` | `3` | Retry count when fetching PO token |
+| `PO_TOKEN_RETRY_DELAY` | `2000` | Ms between PO token retries |
 | `DB_PATH` | `data/zen-bot.db` | SQLite database file path |
 
 ### Discord Bot Setup
@@ -191,7 +197,7 @@ When you run `npm install`:
 
 | Problem | Solution |
 |---------|----------|
-| Missing or invalid env.json | Set `BOT_TOKEN` env var or create `env.json` |
+| Missing BOT_TOKEN | Set `BOT_TOKEN` env var or add `BOT_TOKEN` to `env.json` (copy env.example.json; use ENV-style keys) |
 | EACCES on yt-dlp | Run `chmod +x third_party/yt-dlp/yt-dlp` or install yt-dlp system-wide |
 | 403 from YouTube | Ensure PO token provider is running (`start:full`) |
 | No audio | Ensure FFmpeg is installed and on PATH |
