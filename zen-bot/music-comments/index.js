@@ -1,35 +1,21 @@
 /**
  * Music-comments feature — track comments and reactions during playback.
- * Exposes ctx.services.comments; relies on ctx.db.music (from music-stats) for persistence.
- * Replies to the enqueued message and reactions on it are recorded and replayed in sync with the track.
+ * Exposes ctx.services["music-comments"]; relies on ctx.db.music (from music-stats) for persistence.
  *
  * @module zen-bot/music-comments
  */
 
-const { createLogger } = require("../core/logger");
-const services = require("./services");
-
-const log = createLogger("music-comments");
-
 /**
- * Attach comments service to ctx.services.comments.
- *
- * @param {object} ctx - Shared context (mutated: services.comments)
+ * @param {object} ctx - Shared context
  * @returns {Promise<void>}
  */
 async function init(ctx) {
+	const log = ctx.log;
 	log.info("Initializing music-comments...");
-
 	if (!ctx.db?.music) {
-		const msg = "music-comments expects ctx.db.music; ensure music-stats is in FEATURE_ORDER before music-comments.";
-		log.error(msg);
-		throw new Error(msg);
+		throw new Error("music-comments expects ctx.db.music; ensure music-stats is in load order before music-comments.");
 	}
-
-	// Export services for other features
-	ctx.services.comments = services;
-
 	log.info("Music-comments initialized");
 }
 
-module.exports = { init };
+module.exports = { init, dependsOn: ["core", "database", "music-stats"] };

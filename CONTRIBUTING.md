@@ -64,13 +64,17 @@ ctx = {
     // ... other feature namespaces
   },
   commands: Map,            // Command registry (set by core)
-  services: {               // Shared services
-    activity: Object,       // Bot activity/status helpers
-    soundboard: Object,     // Soundboard utilities
-    comments: Object,       // Comment session management
+  services: {               // Shared services (loader attaches from each feature's services.js)
+    core: { activity, soundboard },  // Bot activity/status, soundboard
+    "music-comments": Object,         // Comment session management
+    example: Object,        // Example feature API
+    // ... ctx.services[featureName] per feature with services.js
   },
-  config: Object,           // Core config (token, prefix)
-  musicConfig: Object,      // Music-specific config
+  config: Object,           // Core config (token, prefix; set by core)
+  log: Object,              // Feature-scoped logger (set by loader when invoking your command/event)
+  loggers: Object,          // All feature loggers: ctx.loggers[featureName]
+  enabledFeatures: Array,   // Names of enabled features
+  // Feature configs: ctx.[featureName]Config (e.g. ctx.coreConfig, ctx.musicConfig, ctx.exampleConfig)
 }
 ```
 
@@ -92,58 +96,52 @@ zen-bot/
     └── services.js       # Optional: feature services
 ```
 
-### 2. Register in Feature Order
+### 2. Feature discovery and load order
 
-Edit `zen-bot/index.js` and add your feature to `FEATURE_ORDER`:
+**Features are discovered automatically.** Any directory under `zen-bot/` that has at least one of `index.js`, `commands/`, or `events/` is a feature. No central list to edit.
 
-```javascript
-const FEATURE_ORDER = [
-  "core",           // Must be first
-  "database",      // Provides ctx.db; must run before any feature that uses it
-  "music",         // Provides player
-  "moderation",
-  "music-stats",   // Registers ctx.db.music
-  "music-comments", // Depends on music-stats
-  "my-feature",    // Your feature (add here)
-];
+- **Default: enabled.** New features are enabled as soon as they exist.
+- **Disable by config:** Set `DISABLED_FEATURES` in env or `env.json` (comma-separated), e.g. `"DISABLED_FEATURES": "example,moderation"`. The `core` feature cannot be disabled.
+- **Optional .disabled file:** Placing a file named `.disabled` inside a feature directory also disables that feature (unless it is `core`).
+- **Load order** is inferred from **dependsOn**. In your feature's `index.js`, export `dependsOn: ["core", "database"]` (or whatever you need). The loader topo-sorts features; cycles or missing dependencies cause startup to fail.
+
+### 3. Scaffold (optional)
+
+From the project root:
+
+```bash
+npm run create-feature -- my-feature
 ```
 
-**Order matters.** Features are loaded sequentially. Place your feature after its dependencies.
+This creates `zen-bot/my-feature/` with `index.js`, `config.js`, `commands/`, and `events/`. The feature is enabled by default.
 
-### 3. Create `index.js` (Entry Point)
+### 4. Create `index.js` (optional for commands-only features)
 
-Every feature needs an `index.js` with an `init(ctx)` function:
+If your feature only has `commands/` or `events/`, you can omit `index.js`; the loader will still discover and wire them. If you need to run setup (e.g. register a db namespace, attach services), add `index.js` with an `init(ctx)` function and export **dependsOn**:
 
 ```javascript
 /**
  * My Feature - Brief description.
  */
 
-const { createLogger } = require("../core/logger");
-
-const log = createLogger("my-feature");
-
 /**
- * Initialize the feature.
- * @param {object} ctx - Shared context object
+ * Initialize the feature. Use ctx.log (set by loader).
+ * @param {object} ctx - Shared context (log, client, db, etc.)
  */
 async function init(ctx) {
-  log.info("Initializing my-feature...");
+  const log = ctx.log;
+  if (log) log.info("Initializing my-feature...");
 
-  // Access dependencies from ctx
-  // ctx.client - Discord client
-  // ctx.player - Music player (if music feature loaded)
-  // ctx.db     - Database (if music-stats feature loaded)
-
+  // Access dependencies from ctx (client, player, db, etc.)
   // Export services for other features
   ctx.services.myFeature = {
     doSomething: () => { /* ... */ },
   };
 
-  log.info("my-feature initialized");
+  if (log) log.info("my-feature initialized");
 }
 
-module.exports = { init };
+module.exports = { init, dependsOn: ["core"] };
 ```
 
 ## Commands
@@ -155,26 +153,16 @@ Commands live in `zen-bot/[feature]/commands/[name].js`.
 ```javascript
 /**
  * MyCommand - Brief description.
+ * Use ctx.log (set by loader before execute). No require of core/logger.
  */
 
-const { createLogger } = require("../../core/logger");
-
-const log = createLogger("mycommand");
-
 module.exports = {
-  // Required: primary command name
   name: "mycommand",
-
-  // Optional: alternative names
   aliases: ["mc", "mycmd"],
 
-  // Required: command handler
   async execute(message, args, ctx) {
-    // message - Discord.js Message object
-    // args    - Array of arguments (command prefix and name stripped)
-    // ctx     - Shared context object
-
-    log.info(`Executing with args: ${args.join(", ")}`);
+    const log = ctx.log;
+    if (log) log.info(`Executing with args: ${args.join(", ")}`);
 
     // Access other features
     const player = ctx.player;
@@ -204,30 +192,21 @@ Events live in `zen-bot/[feature]/events/[eventName].js`.
 ```javascript
 /**
  * Handler for [event description].
+ * Use ctx.log (set by loader). Target is optional—inferred from event name if missing.
  */
 
-const { createLogger } = require("../../core/logger");
-
-const log = createLogger("my-feature");
-
 module.exports = {
-  // Required: event name
   event: "messageCreate",
+  target: "client",  // optional: "client" for Discord events, "player" for discord-player
 
-  // Required: target (client or player)
-  target: "client",  // "client" for Discord events, "player" for discord-player events
-
-  // Required: event handler
   async handle(message, ctx) {
-    // Arguments match the event signature
-    // ctx is always the last argument
-
-    log.debug(`Received message: ${message.content}`);
+    const log = ctx.log;
+    if (log) log.debug(`Received message: ${message.content}`);
   },
 };
 ```
 
-**Target is required.** Set `target` to `"client"` for Discord.js events or `"player"` for discord-player events. If `target` is missing or invalid, the loader defaults to `"client"` and logs a warning.
+**Target** is optional. Set `target` to `"client"` for Discord.js events or `"player"` for discord-player events. If missing or invalid, the loader infers from the event name (e.g. playerStart → player).
 
 ### Client Events (Discord.js)
 
@@ -284,30 +263,35 @@ module.exports = {
 
 ### Use in Feature
 
-```javascript
-const config = require("./config");
+The loader attaches your feature's config as `ctx.[featureName]Config` before calling `init(ctx)`. Do not require config in init or assign it to ctx.
 
+```javascript
 async function init(ctx) {
-  console.log(config.someSetting);
-  ctx.myFeatureConfig = config;  // Expose to other features if needed
+  const config = ctx.myFeatureConfig;  // Loader sets this from your config.js
+  const log = ctx.log;                 // Loader sets this before init
+  log.info("Setting:", config?.someSetting);
 }
 ```
 
 ## Logger
 
-The logger is a minimal factory that creates prefixed loggers.
+In **init**, **commands**, and **events** use `ctx.log` (the loader sets it before each init and before each command/event handler). Use **createLogger** only in submodules (e.g. `database.js`, `services.js`) that are not invoked by the loader with ctx.
 
-### Usage
+### Usage (init / commands / events)
+
+```javascript
+async function init(ctx) {
+  const log = ctx.log;
+  log.debug("Verbose debugging info");
+  log.info("General information");
+}
+```
+
+### Submodules (database.js, services.js, etc.)
 
 ```javascript
 const { createLogger } = require("../core/logger");
-
-const log = createLogger("my-feature");
-
-log.debug("Verbose debugging info");
-log.info("General information");
-log.warn("Warning message");
-log.error("Error occurred", error);
+const log = createLogger("my-feature-db");
 ```
 
 ### Log Levels
@@ -320,38 +304,34 @@ Controlled by `LOG_LEVEL` (env var or env.json key; default: `debug`):
 
 ## Services
 
-Services are shared utilities exposed through `ctx.services`.
+Services are shared utilities exposed through `ctx.services.[featureName]`. The loader attaches them by convention from each feature's `services.js`.
 
-### Creating a Service
+### Convention: services.js
+
+Export an `api` object (and optional `init(ctx)`). The loader calls `init(ctx)` if present, then sets `ctx.services.[featureName]` to `api` (or the module). You do not assign to `ctx.services` in your feature's index.js.
 
 ```javascript
 // zen-bot/my-feature/services.js
 
 const { createLogger } = require("../core/logger");
+let log = createLogger("my-service");
 
-const log = createLogger("my-service");
+function init(ctx) {
+  if (ctx?.log) log = ctx.log;
+}
 
 function doSomething(data) {
   log.debug("Doing something with", data);
   return data.toUpperCase();
 }
 
-module.exports = { doSomething };
+const api = { doSomething };
+module.exports = { init, api };
 ```
 
 ### Exposing Services
 
-In your feature's `index.js`:
-
-```javascript
-const services = require("./services");
-
-async function init(ctx) {
-  ctx.services.myFeature = services;
-}
-```
-
-**Two patterns are valid:** (1) Expose a shaped object with the public methods your feature provides (e.g. `ctx.services.myFeature = { doSomething, getCount }`). (2) Expose the whole service module (e.g. `ctx.services.myFeature = require("./services")`). If your service needs `ctx` at startup (e.g. to call other features), call an `init(ctx)` on the service before exposing it.
+No code in index.js is needed. The loader loads your `services.js`, calls `init(ctx)` if present, and sets `ctx.services.[featureName]` from the exported `api` (or the module).
 
 ### Using Services from Other Features
 
@@ -364,7 +344,7 @@ async function execute(message, args, ctx) {
 
 ## Database
 
-The **database** feature provides a shared SQLite database through `ctx.db`. It must appear in `FEATURE_ORDER` after core and before any feature that registers or uses `ctx.db`. Features register their own **namespaces** to add tables and query functions.
+The **database** feature provides a shared SQLite database through `ctx.db`. Load order is determined by `dependsOn`; list database after core. The loader registers namespaces from each feature's `database.js` by convention (no manual `ctx.db.register` in your init).
 
 ### Database Architecture
 
@@ -383,23 +363,16 @@ ctx.db
     └── ...
 ```
 
-### Registering a Database Namespace
+### Registering a Database Namespace (convention)
 
-Create a `database.js` file in your feature:
+Create a `database.js` file in your feature. Export an `init(db, ctx)` function (and optionally `namespace`). The loader calls it with the raw connection and ctx so you can use `ctx.log`. The loader registers after your feature's init—you do not register in index.js.
 
 ```javascript
 // zen-bot/my-feature/database.js
 
-const { createLogger } = require("../core/logger");
-const log = createLogger("my-feature-db");
+function initMyFeatureDatabase(db, ctx) {
+  const log = ctx?.log;
 
-/**
- * Initialize the database namespace.
- * @param {import('better-sqlite3').Database} db - Database connection
- * @returns {object} Object with query functions
- */
-function initMyFeatureDatabase(db) {
-  // Create tables
   db.exec(`
     CREATE TABLE IF NOT EXISTS my_table (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -410,20 +383,17 @@ function initMyFeatureDatabase(db) {
     CREATE INDEX IF NOT EXISTS idx_my_table_user ON my_table(user_id);
   `);
 
-  log.info("My feature tables initialized");
+  if (log) log.info("My feature tables initialized");
 
-  // Return query functions
   return {
     saveData({ userId, data }) {
       const stmt = db.prepare("INSERT INTO my_table (user_id, data) VALUES (?, ?)");
       stmt.run(userId, data);
     },
-
     getData(userId) {
       const stmt = db.prepare("SELECT * FROM my_table WHERE user_id = ?");
       return stmt.all(userId);
     },
-
     clearData(userId) {
       const stmt = db.prepare("DELETE FROM my_table WHERE user_id = ?");
       return stmt.run(userId).changes;
@@ -431,23 +401,10 @@ function initMyFeatureDatabase(db) {
   };
 }
 
-module.exports = { initMyFeatureDatabase };
+module.exports = { init: initMyFeatureDatabase, namespace: "myFeature" };
 ```
 
-Register in your feature's `index.js`:
-
-```javascript
-// zen-bot/my-feature/index.js
-
-const { initMyFeatureDatabase } = require("./database");
-
-async function init(ctx) {
-  // Register the namespace
-  ctx.db.register("myFeature", initMyFeatureDatabase);
-
-  // Now available: ctx.db.myFeature.saveData(), ctx.db.myFeature.getData(), etc.
-}
-```
+After your feature loads, `ctx.db.myFeature` is available.
 
 ### Using Database Namespaces
 
@@ -492,14 +449,12 @@ LOG_LEVEL=debug npm start
 
 ## Checklist for New Features
 
-- [ ] Create `zen-bot/[feature]/index.js` with `init(ctx)` function
-- [ ] Add feature to `FEATURE_ORDER` in `zen-bot/index.js` (after dependencies)
-- [ ] Create `config.js` if feature has configurable options
-- [ ] Create commands in `commands/` directory
-- [ ] Create event handlers in `events/` directory
-- [ ] Export services to `ctx.services` if other features need them
-- [ ] Use `createLogger()` for all logging
-- [ ] Document environment variables in README.md
+- [ ] Create `zen-bot/[feature]/` with optional `index.js` (export `init`, `dependsOn`), `config.js`, `commands/`, `events/`
+- [ ] No central list to edit—feature is discovered and enabled by default
+- [ ] To disable: set `DISABLED_FEATURES` in env.json or add a `.disabled` file in the feature dir
+- [ ] Use `ctx.log` in commands and events; use `ctx.[featureName]Config` for config
+- [ ] Optional: run `npm run create-feature -- my-feature` to scaffold
+- [ ] Document environment variables in your feature README if needed
 
 ## Code Style
 

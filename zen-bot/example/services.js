@@ -19,9 +19,10 @@
  */
 
 const { createLogger } = require("../core/logger");
-const config = require("./config");
 
-const log = createLogger("example-service");
+let log = createLogger("example-service");
+/** Set from ctx.exampleConfig in init() (loader attaches config by convention). */
+let config = null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRIVATE STATE
@@ -60,7 +61,9 @@ let ctx = null;
  */
 function init(context) {
 	ctx = context;
-	log.debug("Services initialized with context");
+	if (context?.log) log = context.log;
+	if (context?.exampleConfig != null) config = context.exampleConfig;
+	if (log) log.debug("Services initialized with context");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -83,8 +86,7 @@ function init(context) {
  * @returns {{ success: boolean, message: string, count?: number }}
  */
 function greet(userId, userName, guildId) {
-	// Check if feature is enabled
-	if (!config.featureEnabled) {
+	if (!config?.featureEnabled) {
 		return { success: false, message: "Greeting feature is disabled" };
 	}
 
@@ -93,8 +95,8 @@ function greet(userId, userName, guildId) {
 	const now = Date.now();
 	const elapsed = now - lastGreet;
 
-	if (elapsed < config.cooldownMs) {
-		const remaining = Math.ceil((config.cooldownMs - elapsed) / 1000);
+	if (elapsed < (config?.cooldownMs ?? 0)) {
+		const remaining = Math.ceil(((config?.cooldownMs ?? 0) - elapsed) / 1000);
 		log.debug(`User ${userName} is on cooldown (${remaining}s remaining)`);
 		return {
 			success: false,
@@ -113,7 +115,7 @@ function greet(userId, userName, guildId) {
 	count += 1;
 
 	// Check max greetings
-	if (count > config.maxGreetings) {
+	if (count > (config?.maxGreetings ?? 0)) {
 		log.debug(`User ${userName} exceeded max greetings`);
 		return {
 			success: false,
@@ -152,7 +154,7 @@ function greet(userId, userName, guildId) {
  * @returns {string}
  */
 function getRandomGreeting() {
-	const greetings = [config.greeting, ...config.specialGreetings];
+	const greetings = [config?.greeting ?? "Hello", ...(config?.specialGreetings ?? [])];
 	return greetings[Math.floor(Math.random() * greetings.length)];
 }
 
@@ -209,15 +211,8 @@ function getContext() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 module.exports = {
-	// Initialization
 	init,
-
-	// Core service functions
-	greet,
-	getGreetCount,
-	resetGreetCount,
-
-	// Utilities (optional - expose if other features need them)
+	api: { greet, getGreetCount, resetGreetCount },
 	getRandomGreeting,
 	getContext,
 };

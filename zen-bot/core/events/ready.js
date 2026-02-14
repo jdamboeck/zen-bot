@@ -5,10 +5,7 @@
  * @module zen-bot/core/events/ready
  */
 
-const { createLogger } = require("../logger");
 const activity = require("../services/activity");
-
-const log = createLogger("core");
 
 module.exports = {
 	event: "clientReady",
@@ -16,11 +13,12 @@ module.exports = {
 
 	/**
 	 * @param {import("discord.js").Client} client
-	 * @param {object} ctx - Shared context
+	 * @param {object} ctx - Shared context (log set by loader)
 	 */
 	async handle(client, ctx) {
-		log.info("Discord client ready — logged in as", client.user?.tag);
-		log.debug("Guilds:", client.guilds.cache.size, "| Cached users:", client.users.cache.size);
+		const log = ctx.log;
+		if (log) log.info("Discord client ready — logged in as", client.user?.tag);
+		if (log) log.debug("Guilds:", client.guilds.cache.size, "| Cached users:", client.users.cache.size);
 
 		// No startup error: we reached ready — set green circle and Operational
 		if (client.user) {

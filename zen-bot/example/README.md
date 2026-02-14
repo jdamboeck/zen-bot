@@ -46,17 +46,17 @@ zen-bot/example/
 
 ### 1. Feature Entry Point (`index.js`)
 
-```javascript
-const { createLogger } = require("../core/logger");
-const log = createLogger("my-feature");
+Use `ctx.log` (set by loader). Export `dependsOn` so load order is correct.
 
+```javascript
 async function init(ctx) {
-    // Access dependencies from ctx
-    // Initialize services
-    // Export services to ctx.services
+    const log = ctx.log;
+    if (log) log.info("Initializing my-feature...");
+    // Access dependencies from ctx; export services to ctx.services
+    if (log) log.info("my-feature initialized");
 }
 
-module.exports = { init };
+module.exports = { init, dependsOn: ["core"] };
 ```
 
 ### 2. Configuration (`config.js`)
@@ -92,44 +92,49 @@ module.exports = {
 
 ### 4. Events (`events/[eventName].js`)
 
+Use `ctx.log`. `target` is optional (inferred from event name if missing).
+
 ```javascript
 module.exports = {
-    event: "messageCreate",    // Event name
-    target: "client",          // "client" or "player"
+    event: "messageCreate",
+    target: "client",   // optional: "client" or "player"
 
     async handle(message, ctx) {
-        // Arguments match event signature
-        // ctx is always last
+        const log = ctx.log;
+        if (log) log.debug("Received message");
     },
 };
 ```
 
 ### 5. Services (`services.js`)
 
-```javascript
-const log = createLogger("my-service");
-let ctx = null;
+Export `init(ctx)` and `api`. The loader calls `init(ctx)` then sets `ctx.services.[featureName]` to `api`. Use `ctx.log` and `ctx.[featureName]Config` in init.
 
-function init(context) {
-    ctx = context;
+```javascript
+const { createLogger } = require("../core/logger");
+let log = createLogger("my-service");
+
+function init(ctx) {
+    if (ctx?.log) log = ctx.log;
 }
 
 function doSomething(input) {
-    // Business logic here
+    log.debug("Doing something");
     return result;
 }
 
-module.exports = { init, doSomething };
+const api = { doSomething };
+module.exports = { init, api };
 ```
 
 ### 6. Database Namespace (`database.js`)
 
-```javascript
-const { createLogger } = require("../core/logger");
-const log = createLogger("my-feature-db");
+Export `init(db, ctx)`. The loader passes the connection and ctx so you can use `ctx.log`. The loader registers from this file automatically; no code in index.js.
 
-function initMyFeatureDatabase(db) {
-    // Create tables
+```javascript
+function initMyFeatureDatabase(db, ctx) {
+    const log = ctx?.log;
+
     db.exec(`
         CREATE TABLE IF NOT EXISTS my_table (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,9 +143,8 @@ function initMyFeatureDatabase(db) {
         );
     `);
 
-    log.info("My feature tables initialized");
+    if (log) log.info("My feature tables initialized");
 
-    // Return query functions
     return {
         saveData({ userId, data }) {
             const stmt = db.prepare("INSERT INTO my_table (user_id, data) VALUES (?, ?)");
@@ -153,18 +157,7 @@ function initMyFeatureDatabase(db) {
     };
 }
 
-module.exports = { initMyFeatureDatabase };
-```
-
-Register in `index.js`:
-
-```javascript
-const { initMyFeatureDatabase } = require("./database");
-
-async function init(ctx) {
-    ctx.db.register("myFeature", initMyFeatureDatabase);
-    // Now available: ctx.db.myFeature.saveData(), ctx.db.myFeature.getData()
-}
+module.exports = { init: initMyFeatureDatabase, namespace: "myFeature" };
 ```
 
 ## Events Handled
@@ -177,10 +170,7 @@ async function init(ctx) {
 
 ## Inter-Feature Dependencies
 
-This feature depends on:
-- `core` - For Discord client, services, and database context
-
-It must be loaded **after** `core` in `FEATURE_ORDER`.
+This feature declares `dependsOn: ["core", "database"]` in index.js so the loader runs it after core and database.
 
 ## Database Namespace
 
@@ -201,17 +191,9 @@ The database is persistent - greetings survive bot restarts.
 
 ## Enabling the Feature
 
-To enable this example feature, add it to `FEATURE_ORDER` in `zen-bot/index.js`:
+Features are **discovered and enabled by default**. This example ships with a **`.disabled`** file so it is off until you enable it:
 
-```javascript
-const FEATURE_ORDER = [
-    "core",
-    "music",
-    "moderation",
-    "music-stats",
-    "music-comments",
-    "example",        // Add this line
-];
-```
+- **Enable:** Remove the file `zen-bot/example/.disabled`, or ensure `example` is not in `DISABLED_FEATURES` in env.json and remove `.disabled`.
+- **Disable again:** Add an empty file `zen-bot/example/.disabled`, or set `DISABLED_FEATURES` in env.json to include `example`.
 
-**Note:** The example feature is disabled by default. Enable it only for learning/testing.
+Use the example for learning; disable it in production if you don't need it.

@@ -1,12 +1,13 @@
 {
   "name": "zen-bot",
-  "version": "0.02.01",
+  "version": "0.02.02",
   "description": "zen-bot for Discord - An expandable and zen approach to Discord bots",
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
     "start:full": "./start.sh",
-    "postinstall": "node scripts/ensure-bgutil-plugin.js && node scripts/ensure-yt-dlp.js"
+    "postinstall": "node scripts/ensure-bgutil-plugin.js && node scripts/ensure-yt-dlp.js",
+    "create-feature": "node scripts/create-feature.js"
   },
   "engines": {
     "node": ">=18"

@@ -12,39 +12,26 @@
  * @module zen-bot/example/events/ready
  */
 
-const { createLogger } = require("../../core/logger");
-const config = require("../config");
-
-const log = createLogger("example-ready");
-
 module.exports = {
 	event: "clientReady",
 	target: "client",
 
 	/**
-	 * Handle the ready event.
-	 *
-	 * @param {import('discord.js').Client} client - The ready client (first arg from ready event)
-	 * @param {object} ctx - Shared context object
+	 * @param {import('discord.js').Client} client
+	 * @param {object} ctx - Shared context (log, exampleConfig)
 	 */
 	async handle(client, ctx) {
-		// Note: For the 'ready' event, Discord.js passes the client as the first argument
-		// ctx is always appended as the last argument by the feature loader
+		const log = ctx.log;
+		const config = ctx.exampleConfig;
 
-		log.info("Example feature is ready!");
-		log.info(`Greeting configured: "${config.greeting}"`);
-		log.info(`Max greetings: ${config.maxGreetings}`);
-		log.info(`Cooldown: ${config.cooldownFormatted}`);
+		if (log) log.info("Example feature is ready!");
+		if (log) log.info(`Greeting configured: "${config?.greeting}"`);
+		if (log) log.info(`Max greetings: ${config?.maxGreetings}`);
+		if (log) log.info(`Cooldown: ${config?.cooldownFormatted}`);
 
-		// ───────────────────────────────────────────────────────────────────────
-		// ACCESS BOT INFORMATION
-		// ───────────────────────────────────────────────────────────────────────
-		// The client is fully connected at this point
+		if (log) log.info(`Bot is in ${ctx.client.guilds.cache.size} guilds`);
 
-		log.info(`Bot is in ${ctx.client.guilds.cache.size} guilds`);
-
-		// List guild names (useful for debugging)
-		if (config.verbose) {
+		if (config?.verbose && log) {
 			for (const [, guild] of ctx.client.guilds.cache) {
 				log.debug(`  - ${guild.name} (${guild.memberCount} members)`);
 			}

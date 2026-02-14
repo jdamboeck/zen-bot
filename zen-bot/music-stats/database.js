@@ -9,21 +9,17 @@
  * @module zen-bot/music-stats/database
  */
 
-const { createLogger } = require("../core/logger");
-
-const log = createLogger("music-db");
-
 /**
  * Initialize the music database namespace.
  *
- * This function is passed to ctx.db.register() and receives the raw
- * database connection. It creates the required tables and returns
- * an object with all query functions.
+ * Called by the loader via ctx.db.register(); receives (db, ctx). Use ctx.log for logging.
  *
  * @param {import('better-sqlite3').Database} db - Database connection
+ * @param {object} ctx - Shared context (ctx.log)
  * @returns {object} Object with query functions
  */
-function initMusicDatabase(db) {
+function initMusicDatabase(db, ctx) {
+	const log = ctx?.log;
 	// ─────────────────────────────────────────────────────────────────────────
 	// TABLE CREATION
 	// ─────────────────────────────────────────────────────────────────────────
@@ -77,7 +73,7 @@ function initMusicDatabase(db) {
 		CREATE INDEX IF NOT EXISTS idx_track_reactions_video ON track_reactions(video_url, guild_id);
 	`);
 
-	log.info("Music database tables initialized");
+	if (log) log.info("Music database tables initialized");
 
 	// ─────────────────────────────────────────────────────────────────────────
 	// QUERY FUNCTIONS
@@ -104,7 +100,7 @@ function initMusicDatabase(db) {
 				VALUES (?, ?, ?, ?, ?)
 			`);
 			stmt.run(videoUrl, videoTitle, userId, userName, guildId);
-			log.debug(`Recorded play: "${videoTitle}" by ${userName}`);
+			if (log) log.debug(`Recorded play: "${videoTitle}" by ${userName}`);
 		},
 
 		/**
@@ -224,7 +220,7 @@ function initMusicDatabase(db) {
 				DELETE FROM play_history WHERE guild_id = ?
 			`);
 			const result = stmt.run(guildId);
-			log.info(`Cleared ${result.changes} music stats records for guild ${guildId}`);
+			if (log) log.info(`Cleared ${result.changes} music stats records for guild ${guildId}`);
 			return result.changes;
 		},
 
@@ -248,7 +244,7 @@ function initMusicDatabase(db) {
 				VALUES (?, ?, ?, ?, ?, ?)
 			`);
 			stmt.run(videoUrl, guildId, userId, userName, commentText, timestampMs);
-			log.debug(`Saved track comment at ${timestampMs}ms by ${userName}`);
+			if (log) log.debug(`Saved track comment at ${timestampMs}ms by ${userName}`);
 		},
 
 		/**
@@ -277,7 +273,7 @@ function initMusicDatabase(db) {
 				DELETE FROM track_comments WHERE guild_id = ?
 			`);
 			const result = stmt.run(guildId);
-			log.info(`Cleared ${result.changes} track comments for guild ${guildId}`);
+			if (log) log.info(`Cleared ${result.changes} track comments for guild ${guildId}`);
 			return result.changes;
 		},
 
@@ -292,7 +288,7 @@ function initMusicDatabase(db) {
 				DELETE FROM track_comments WHERE video_url = ? AND guild_id = ?
 			`);
 			const result = stmt.run(videoUrl, guildId);
-			log.info(`Cleared ${result.changes} comments for video in guild ${guildId}`);
+			if (log) log.info(`Cleared ${result.changes} comments for video in guild ${guildId}`);
 			return result.changes;
 		},
 
@@ -317,7 +313,7 @@ function initMusicDatabase(db) {
 				VALUES (?, ?, ?, ?, ?, ?)
 			`);
 			stmt.run(videoUrl, guildId, userId, userName, reactionEmoji, timestampMs);
-			log.debug(`Saved track reaction at ${timestampMs}ms by ${userName}: ${reactionEmoji}`);
+			if (log) log.debug(`Saved track reaction at ${timestampMs}ms by ${userName}: ${reactionEmoji}`);
 		},
 
 		/**
@@ -348,7 +344,7 @@ function initMusicDatabase(db) {
 				DELETE FROM track_reactions WHERE guild_id = ?
 			`);
 			const result = stmt.run(guildId);
-			log.info(`Cleared ${result.changes} track reactions for guild ${guildId}`);
+			if (log) log.info(`Cleared ${result.changes} track reactions for guild ${guildId}`);
 			return result.changes;
 		},
 
@@ -364,10 +360,10 @@ function initMusicDatabase(db) {
 				DELETE FROM track_reactions WHERE video_url = ? AND guild_id = ?
 			`);
 			const result = stmt.run(videoUrl, guildId);
-			log.info(`Cleared ${result.changes} reactions for video in guild ${guildId}`);
+			if (log) log.info(`Cleared ${result.changes} reactions for video in guild ${guildId}`);
 			return result.changes;
 		},
 	};
 }
 
-module.exports = { initMusicDatabase };
+module.exports = { initMusicDatabase, init: initMusicDatabase, namespace: "music" };

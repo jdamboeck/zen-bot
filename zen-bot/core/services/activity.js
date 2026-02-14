@@ -9,7 +9,7 @@ const { ActivityType } = require("discord-api-types/v10");
 const { createLogger } = require("../logger");
 const url = require("../utils/url");
 
-const log = createLogger("activity");
+const defaultLog = createLogger("activity");
 
 /** Max length for activity name/state (Discord limit). */
 const MAX_ACTIVITY_LEN = 128;
@@ -30,8 +30,10 @@ function truncate(str, max = MAX_ACTIVITY_LEN) {
  *
  * @param {import("discord.js").Client} client
  * @param {string|{ name: string, state?: string, type?: number, url?: string }|null} activityOrName - Simple string, or { name, state?, type?, url? }
+ * @param {object} [optLog] - Optional logger (e.g. ctx.log)
  */
-function setBotActivity(client, activityOrName) {
+function setBotActivity(client, activityOrName, optLog) {
+	const log = optLog || defaultLog;
 	if (!client.user) return;
 	if (!activityOrName) {
 		log.debug("Activity cleared");
@@ -59,8 +61,10 @@ function setBotActivity(client, activityOrName) {
  * @param {import("discord.js").Client} client
  * @param {import("discord.js").VoiceChannel|string} voiceChannel - Channel or channel ID
  * @param {string|null} status - Status text (empty string clears)
+ * @param {object} [optLog] - Optional logger (e.g. ctx.log)
  */
-async function setVoiceChannelStatus(client, voiceChannel, status) {
+async function setVoiceChannelStatus(client, voiceChannel, status, optLog) {
+	const log = optLog || defaultLog;
 	const channelId = voiceChannel?.id ?? voiceChannel;
 	if (!channelId || !client.rest) return;
 	const text = status == null ? "" : String(status).slice(0, MAX_ACTIVITY_LEN);

@@ -13,7 +13,7 @@ module.exports = {
 
 	/**
 	 * @param {import("discord.js").Message} message
-	 * @param {object} ctx - Shared context (ctx.services.comments, ctx.db.music)
+	 * @param {object} ctx - Shared context (ctx.services["music-comments"], ctx.db.music)
 	 * @returns {Promise<boolean>} True if message was a reply to tracked message and was handled
 	 */
 	async handle(message, ctx) {

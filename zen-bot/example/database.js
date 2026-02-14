@@ -10,27 +10,22 @@
  * 1. Export an init function that receives the raw database connection
  * 2. Create your tables in the init function
  * 3. Return an object with all your query functions
- * 4. Register in your feature's index.js: ctx.db.register("example", initExampleDatabase)
+ * 4. The loader registers this namespace from database.js by convention (no code in index.js).
  *
  * @module zen-bot/example/database
  */
 
-const { createLogger } = require("../core/logger");
-
-const log = createLogger("example-db");
-
 /**
  * Initialize the example database namespace.
  *
- * This function is passed to ctx.db.register() and receives the raw
- * better-sqlite3 database connection. It should:
- * 1. Create any required tables
- * 2. Return an object with all query functions
+ * Called by the loader via ctx.db.register(); receives (db, ctx). Use ctx.log for logging.
  *
  * @param {import('better-sqlite3').Database} db - Database connection
+ * @param {object} ctx - Shared context (ctx.log)
  * @returns {object} Object with query functions for ctx.db.example
  */
-function initExampleDatabase(db) {
+function initExampleDatabase(db, ctx) {
+	const log = ctx?.log;
 	// ─────────────────────────────────────────────────────────────────────────
 	// TABLE CREATION
 	// ─────────────────────────────────────────────────────────────────────────
@@ -52,7 +47,7 @@ function initExampleDatabase(db) {
 			ON example_greetings(guild_id);
 	`);
 
-	log.info("Example database tables initialized");
+	if (log) log.info("Example database tables initialized");
 
 	// ─────────────────────────────────────────────────────────────────────────
 	// QUERY FUNCTIONS
@@ -76,7 +71,7 @@ function initExampleDatabase(db) {
 				VALUES (?, ?, ?, ?)
 			`);
 			stmt.run(userId, userName, guildId, greetingText);
-			log.debug(`Saved greeting for ${userName}`);
+			if (log) log.debug(`Saved greeting for ${userName}`);
 		},
 
 		/**
@@ -163,7 +158,7 @@ function initExampleDatabase(db) {
 				WHERE user_id = ? AND guild_id = ?
 			`);
 			const result = stmt.run(userId, guildId);
-			log.debug(`Cleared ${result.changes} greetings for user ${userId}`);
+			if (log) log.debug(`Cleared ${result.changes} greetings for user ${userId}`);
 			return result.changes;
 		},
 
@@ -178,10 +173,10 @@ function initExampleDatabase(db) {
 				DELETE FROM example_greetings WHERE guild_id = ?
 			`);
 			const result = stmt.run(guildId);
-			log.info(`Cleared ${result.changes} greetings for guild ${guildId}`);
+			if (log) log.info(`Cleared ${result.changes} greetings for guild ${guildId}`);
 			return result.changes;
 		},
 	};
 }
 
-module.exports = { initExampleDatabase };
+module.exports = { initExampleDatabase, init: initExampleDatabase };

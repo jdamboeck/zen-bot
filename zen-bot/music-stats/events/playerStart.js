@@ -4,10 +4,6 @@
  * @module zen-bot/music-stats/events/playerStart
  */
 
-const { createLogger } = require("../../core/logger");
-
-const log = createLogger("music-stats");
-
 module.exports = {
 	event: "playerStart",
 	target: "player",
@@ -15,16 +11,17 @@ module.exports = {
 	/**
 	 * @param {import("discord-player").GuildQueue} queue - metadata.author is the requesting user
 	 * @param {import("discord-player").Track} track
-	 * @param {object} ctx - Shared context (ctx.db.music)
+	 * @param {object} ctx - Shared context (ctx.db.music, log)
 	 */
 	async handle(queue, track, ctx) {
+		const log = ctx.log;
 		const channel = queue.channel;
 		const guild = channel?.guild;
 		const requestedBy = queue.metadata?.author;
 
 		if (requestedBy && guild && track) {
 			try {
-				log.debug("Recording play (guild:", guild.id, "title:", track.title?.slice(0, 40), "user:", requestedBy.username, ")");
+				if (log) log.debug("Recording play (guild:", guild.id, "title:", track.title?.slice(0, 40), "user:", requestedBy.username, ")");
 				ctx.db.music.recordPlay({
 					videoUrl: track.url,
 					videoTitle: track.title,
@@ -33,7 +30,7 @@ module.exports = {
 					guildId: guild.id,
 				});
 			} catch (err) {
-				log.error("Failed to record play:", err);
+				if (log) log.error("Failed to record play:", err);
 			}
 		}
 	},

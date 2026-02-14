@@ -5,20 +5,19 @@
  * @module zen-bot/llm
  */
 
-const { createLogger } = require("../core/logger");
 const { createLlmContext } = require("./llm");
-const config = require("./config");
-
-const log = createLogger("llm");
 
 /**
  * Initialize the LLM feature: create and attach ctx.llm.
+ * Config is attached by loader as ctx.llmConfig.
  *
  * @param {object} ctx - Shared context (mutated: llm)
  * @returns {Promise<void>}
  */
 async function init(ctx) {
-	if (!config.geminiApiKey) {
+	const log = ctx.log;
+	const config = ctx.llmConfig;
+	if (!config?.geminiApiKey) {
 		log.warn("No Gemini API key configured — LLM feature disabled. Set LLM_GEMINI_API_KEY.");
 		ctx.llm = null;
 		return;
@@ -32,4 +31,4 @@ async function init(ctx) {
 	log.info("LLM initialized (ctx.llm available)");
 }
 
-module.exports = { init };
+module.exports = { init, dependsOn: ["core"] };

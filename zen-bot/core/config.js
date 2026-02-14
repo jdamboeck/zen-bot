@@ -84,12 +84,16 @@ const logExcludeServices = get("LOG_EXCLUDE_SERVICES", [], { type: "serviceList"
 /** Service names to include (only these log when non-empty). Env: LOG_INCLUDE_SERVICES */
 const logIncludeServices = get("LOG_INCLUDE_SERVICES", [], { type: "serviceList" });
 
-/** @type {{ botToken: string, prefix: string, logExcludeServices: string[], logIncludeServices: string[], get: Function }} */
+/** Feature names to disable (comma-separated in env or env.json). Env: DISABLED_FEATURES. "core" is ignored. */
+const disabledFeatures = get("DISABLED_FEATURES", [], { type: "array" });
+
+/** @type {{ botToken: string, prefix: string, logExcludeServices: string[], logIncludeServices: string[], disabledFeatures: string[], get: Function }} */
 module.exports = {
 	botToken,
 	/** Command prefix (e.g. "."). Env: PREFIX */
 	prefix: get("PREFIX", "#"),
 	logExcludeServices,
 	logIncludeServices,
+	disabledFeatures,
 	get,
 };

@@ -6,10 +6,7 @@
  * @module zen-bot/database
  */
 
-const { createLogger } = require("../core/logger");
 const { createDatabaseContext } = require("./database");
-
-const log = createLogger("database");
 
 /**
  * Initialize the database feature: create and attach ctx.db.
@@ -18,9 +15,10 @@ const log = createLogger("database");
  * @returns {Promise<void>}
  */
 async function init(ctx) {
+	const log = ctx.log;
 	log.info("Initializing database...");
-	ctx.db = createDatabaseContext();
+	ctx.db = createDatabaseContext(ctx);
 	log.info("Database initialized (ctx.db available)");
 }
 
-module.exports = { init };
+module.exports = { init, dependsOn: ["core"] };

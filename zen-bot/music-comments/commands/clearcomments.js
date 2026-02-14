@@ -5,10 +5,6 @@
  * @module zen-bot/music-comments/commands/clearcomments
  */
 
-const { createLogger } = require("../../core/logger");
-
-const log = createLogger("clearcomments");
-
 module.exports = {
 	name: "clearvideos",
 	aliases: ["clearcomments"],
@@ -17,22 +13,23 @@ module.exports = {
 	/**
 	 * @param {import("discord.js").Message} message
 	 * @param {string[]} args
-	 * @param {object} ctx - Shared context (ctx.db.music)
+	 * @param {object} ctx - Shared context (ctx.db.music, log)
 	 * @returns {Promise<import("discord.js").Message>}
 	 */
 	async execute(message, args, ctx) {
+		const log = ctx.log;
 		if (!message.member.permissions.has("Administrator")) {
-			log.debug("Clearcomments refused: user lacks Administrator (guild:", message.guild.id, ")");
+			if (log) log.debug("Clearcomments refused: user lacks Administrator (guild:", message.guild.id, ")");
 			return message.reply("🛑 You need the 'Administrator' permission to use this command.");
 		}
 
 		const guildId = message.guild.id;
-		log.info("Clearing all track comments for guild:", guildId);
+		if (log) log.info("Clearing all track comments for guild:", guildId);
 
 		try {
 			const commentsDeleted = ctx.db.music.clearTrackComments(guildId);
 			const reactionsDeleted = ctx.db.music.clearTrackReactions(guildId);
-			log.info("Cleared", commentsDeleted, "comments and", reactionsDeleted, "reactions for guild:", guildId, ")");
+			if (log) log.info("Cleared", commentsDeleted, "comments and", reactionsDeleted, "reactions for guild:", guildId, ")");
 			const parts = [];
 			if (commentsDeleted) parts.push(`${commentsDeleted} comment${commentsDeleted !== 1 ? "s" : ""}`);
 			if (reactionsDeleted) parts.push(`${reactionsDeleted} reaction${reactionsDeleted !== 1 ? "s" : ""}`);

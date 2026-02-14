@@ -17,11 +17,8 @@ const {
 	ButtonBuilder,
 	ButtonStyle,
 } = require("discord.js");
-const { createLogger } = require("../../core/logger");
 const url = require("../../core/utils/url");
 const playButtonStore = require("../playButtonStore");
-
-const log = createLogger("musicstats");
 
 const PLAY_ICON = "▶️ ";
 const STOP_ICON = "⏹️ ";
@@ -87,9 +84,10 @@ module.exports = {
 	 * @returns {Promise<import("discord.js").Message>}
 	 */
 	async execute(message, args, ctx) {
+		const log = ctx.log;
 		const guildId = message.guild.id;
 		const userId = message.author.id;
-		log.debug("Musicstats requested (guild:", guildId, "user:", message.author.username, ")");
+		if (log) log.debug("Musicstats requested (guild:", guildId, "user:", message.author.username, ")");
 
 		try {
 			const { music } = ctx.db;
@@ -218,10 +216,10 @@ module.exports = {
 				playButtonStore.set(sent.id, allVideoUrls);
 			}
 
-			log.info("Musicstats sent (guild:", guildId, "totalPlays:", totalPlays, ")");
+			if (log) log.info("Musicstats sent (guild:", guildId, "totalPlays:", totalPlays, ")");
 			return sent;
 		} catch (e) {
-			log.error("Failed to get music stats:", e);
+			if (log) log.error("Failed to get music stats:", e);
 			return message.reply(`Failed to get music stats: ${e.message}`);
 		}
 	},
