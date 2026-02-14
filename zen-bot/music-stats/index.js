@@ -1,35 +1,20 @@
 /**
- * Music-stats feature — registers ctx.db.music with play history, track comments, and reactions.
- * Other features (music-comments, music-stats commands) use ctx.db.music to read/write.
+ * Music-stats feature — play history, track comments, and reactions.
+ * ctx.db.music is registered by loader from database.js (convention).
  *
  * @module zen-bot/music-stats
  */
 
-const { createLogger } = require("../core/logger");
-const { initMusicDatabase } = require("./database");
-
-const log = createLogger("music-stats");
-
 /**
- * Register the "music" database namespace so ctx.db.music is available.
- *
- * @param {object} ctx - Shared context (ctx.db.register)
- * @returns {Promise<void>}
+ * @param {object} ctx - Shared context (ctx.db from database feature)
  */
 async function init(ctx) {
+	const log = ctx.log;
 	log.info("Initializing music-stats...");
-
 	if (!ctx.db) {
-		const msg = "music-stats expects ctx.db; ensure database is in FEATURE_ORDER before music-stats.";
-		log.error(msg);
-		throw new Error(msg);
+		throw new Error("music-stats expects ctx.db; ensure database is in load order before music-stats.");
 	}
-
-	// Register the 'music' database namespace
-	// This makes all music database functions available at ctx.db.music
-	ctx.db.register("music", initMusicDatabase);
-
 	log.info("Music-stats initialized (ctx.db.music available)");
 }
 
-module.exports = { init };
+module.exports = { init, dependsOn: ["core", "database"] };

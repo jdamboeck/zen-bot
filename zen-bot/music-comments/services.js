@@ -8,7 +8,7 @@
 const { ThreadAutoArchiveDuration } = require("discord.js");
 const { createLogger } = require("../core/logger");
 
-const log = createLogger("music-comments");
+let log = createLogger("music-comments");
 
 /**
  * Active tracking session per guild. Key: guildId.
@@ -451,7 +451,11 @@ function handlePotentialReply(message, ctx) {
 	return true;
 }
 
-module.exports = {
+function init(ctx) {
+	if (ctx?.log) log = ctx.log;
+}
+
+const api = {
 	activeSessions,
 	startTrackingSession,
 	stopTrackingSession,
@@ -463,3 +467,5 @@ module.exports = {
 	handlePotentialReply,
 	handleReactionAdd,
 };
+
+module.exports = { init, ...api, api };

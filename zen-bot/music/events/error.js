@@ -4,10 +4,6 @@
  * @module zen-bot/music/events/error
  */
 
-const { createLogger } = require("../../core/logger");
-
-const log = createLogger("player");
-
 module.exports = {
 	event: "error",
 	target: "player",
@@ -15,11 +11,12 @@ module.exports = {
 	/**
 	 * @param {import("discord-player").GuildQueue} queue
 	 * @param {Error} error
-	 * @param {object} ctx
+	 * @param {object} ctx - Shared context (log)
 	 */
 	async handle(queue, error, ctx) {
+		const log = ctx.log;
 		const guildId = queue?.guild?.id ?? "unknown";
-		log.error("Queue error (guild:", guildId, "):", error.message);
-		log.debug("Queue error details:", error);
+		if (log) log.error("Queue error (guild:", guildId, "):", error.message);
+		if (log) log.debug("Queue error details:", error);
 	},
 };

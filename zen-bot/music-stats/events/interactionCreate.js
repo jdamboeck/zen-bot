@@ -5,10 +5,7 @@
  * @module zen-bot/music-stats/events/interactionCreate
  */
 
-const { createLogger } = require("../../core/logger");
 const playButtonStore = require("../playButtonStore");
-
-const log = createLogger("music-stats");
 
 const PREFIX_PLAY = "musicstats_play_";
 const CUSTOM_ID_STOP = "musicstats_stop";
@@ -18,13 +15,12 @@ module.exports = {
 	target: "client",
 
 	/**
-	 * Only handles button interactions with customId musicstats_play_N or musicstats_stop.
-	 *
 	 * @param {import("discord.js").Interaction} interaction
-	 * @param {object} ctx - Shared context (commands)
+	 * @param {object} ctx - Shared context (commands, log)
 	 * @returns {Promise<boolean>} True if this handler processed the interaction
 	 */
 	async handle(interaction, ctx) {
+		const log = ctx.log;
 		if (!interaction.isButton()) return false;
 
 		// Handle stop button
@@ -52,7 +48,7 @@ module.exports = {
 			try {
 				await stopCmd.execute(messageLike, [], ctx);
 			} catch (err) {
-				log.error("Musicstats stop button failed:", err);
+				if (log) log.error("Musicstats stop button failed:", err);
 				await interaction.editReply(`Something went wrong: ${err.message}`).catch(() => {});
 			}
 
@@ -95,7 +91,7 @@ module.exports = {
 		try {
 			await playCmd.execute(messageLike, [videoUrl], ctx);
 		} catch (err) {
-			log.error("Musicstats play button failed:", err);
+			if (log) log.error("Musicstats play button failed:", err);
 			await interaction.editReply(`Something went wrong: ${err.message}`).catch(() => {});
 		}
 

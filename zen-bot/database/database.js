@@ -59,33 +59,24 @@ function getConnection() {
  *
  * Features register their namespaces, which become accessible as ctx.db.[namespace].
  *
+ * @param {object} [ctx] - Shared context (passed to feature init fns for ctx.log)
  * @returns {object} Database context object
  *
  * @example
- * // In music-stats/index.js:
- * ctx.db.register("music", (db) => ({
- *     recordPlay: (data) => { ... },
- *     getTopVideos: (guildId) => { ... },
- * }));
- *
- * // In another feature:
- * ctx.db.music.recordPlay({ ... });
+ * // Feature database.js: init(db, ctx) -> use ctx.log
+ * ctx.db.register("music", (db, ctx) => ({ ... }));
  */
-function createDatabaseContext() {
+function createDatabaseContext(ctx) {
 	const connection = getConnection();
 
 	const dbContext = {
 		/**
 		 * Register a feature's database namespace.
 		 *
-		 * The init function receives the raw database connection and should:
-		 * 1. Create any required tables
-		 * 2. Return an object with query functions
-		 *
-		 * The returned object becomes accessible at ctx.db.[namespace].
+		 * The init function receives (connection, ctx) and should return an object of query functions.
 		 *
 		 * @param {string} namespace - Unique namespace for the feature
-		 * @param {function(Database.Database): object} initFn - Initialization function
+		 * @param {function(Database.Database, object): object} initFn - Initialization function
 		 */
 		register(namespace, initFn) {
 			if (this[namespace]) {
@@ -93,7 +84,7 @@ function createDatabaseContext() {
 			}
 
 			log.debug(`Registering database namespace: ${namespace}`);
-			const namespaceApi = initFn(connection);
+			const namespaceApi = initFn(connection, ctx);
 			this[namespace] = namespaceApi;
 			log.info(`Registered database namespace: ${namespace}`);
 		},

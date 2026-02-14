@@ -4,10 +4,6 @@
  * @module zen-bot/moderation
  */
 
-const { createLogger } = require("../core/logger");
-
-const log = createLogger("moderation");
-
 /**
  * No-op init; commands are loaded by core from moderation/commands.
  *
@@ -15,8 +11,9 @@ const log = createLogger("moderation");
  * @returns {Promise<void>}
  */
 async function init(ctx) {
+	const log = ctx.log;
 	log.info("Initializing moderation...");
 	log.info("Moderation initialized");
 }
 
-module.exports = { init };
+module.exports = { init, dependsOn: ["core"] };

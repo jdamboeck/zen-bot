@@ -6,38 +6,31 @@
  */
 
 const { ActivityType } = require("discord-api-types/v10");
-const { createLogger } = require("../../core/logger");
-
-const log = createLogger("playerStart");
 
 module.exports = {
 	event: "playerStart",
 	target: "player",
 
 	/**
-	 * Show music icon briefly, then "now playing" with listener count and channel.
-	 *
 	 * @param {import("discord-player").GuildQueue} queue
 	 * @param {import("discord-player").Track} track
-	 * @param {object} ctx - Shared context (services.activity, services.soundboard)
+	 * @param {object} ctx - Shared context (ctx.services.core.activity, ctx.services.core.soundboard, log)
 	 */
 	async handle(queue, track, ctx) {
+		const log = ctx.log;
 		const channel = queue.channel;
 		const guild = channel?.guild;
-		log.info("Track started:", track?.title, "| channel:", channel?.id, "| guild:", guild?.id);
-		log.debug("playerStart: setting initial activity and soundboard");
+		if (log) log.info("Track started:", track?.title, "| channel:", channel?.id, "| guild:", guild?.id);
+		if (log) log.debug("playerStart: setting initial activity and soundboard");
 
-		const { activity, soundboard } = ctx.services;
+		const { activity, soundboard } = ctx.services.core;
 
-		// 1) Set voice channel status to music icon first
-		activity.setVoiceChannelStatus(ctx.client, channel, "🎵 Finding the best audio quality");
-		activity.setBotActivity(ctx.client, { name: "🎵 Finding the best audio quality", type: ActivityType.Listening });
-		log.debug("Set activity and channel status to music icon 🎵");
+		activity.setVoiceChannelStatus(ctx.client, channel, "🎵 Finding the best audio quality", ctx.log);
+		activity.setBotActivity(ctx.client, { name: "🎵 Finding the best audio quality", type: ActivityType.Listening }, ctx.log);
+		if (log) log.debug("Set activity and channel status to music icon 🎵");
 
-		// 2) Play soundboard slot 1 before/alongside the track
-		soundboard.tryPlaySoundboardSlot1(guild, channel).catch((err) => log.warn("Soundboard failed:", err));
+		soundboard.tryPlaySoundboardSlot1(guild, channel, ctx.log).catch((err) => log && log.warn("Soundboard failed:", err));
 
-		// 3) After a short delay, set voice channel status and activity to the currently playing song
 		const listeners = channel?.members?.filter((m) => !m.user.bot).size ?? 0;
 		const channelName = channel?.name ?? "voice";
 		const state = `to ${listeners} listener${listeners !== 1 ? "s" : ""} in #${channelName}`;
@@ -51,9 +44,9 @@ module.exports = {
 		};
 
 		setTimeout(() => {
-			activity.setVoiceChannelStatus(ctx.client, channel, trackTitle);
-			activity.setBotActivity(ctx.client, trackActivity);
-			log.debug("Set channel status and activity to track:", trackTitle);
+			activity.setVoiceChannelStatus(ctx.client, channel, trackTitle, ctx.log);
+			activity.setBotActivity(ctx.client, trackActivity, ctx.log);
+			if (log) log.debug("Set channel status and activity to track:", trackTitle);
 		}, soundboard.SOUNDBOARD_ICON_DURATION_MS);
 	},
 };

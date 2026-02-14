@@ -21,59 +21,32 @@
  * @module zen-bot/example/events/playerStart
  */
 
-const { createLogger } = require("../../core/logger");
-const config = require("../config");
-
-const log = createLogger("example-player");
-
 module.exports = {
 	event: "playerStart",
-	target: "player", // <-- Note: "player" not "client"
+	target: "player",
 
 	/**
-	 * Handle the playerStart event.
-	 *
-	 * @param {import('discord-player').GuildQueue} queue - The guild queue
-	 * @param {import('discord-player').Track} track - The track that started
-	 * @param {object} ctx - Shared context object
-	 *
-	 * @example Event signature for playerStart:
-	 * player.events.on('playerStart', (queue, track) => { ... })
-	 * becomes:
-	 * async handle(queue, track, ctx) { ... }
+	 * @param {import('discord-player').GuildQueue} queue
+	 * @param {import('discord-player').Track} track
+	 * @param {object} ctx - Shared context (log, exampleConfig)
 	 */
 	async handle(queue, track, ctx) {
-		if (!config.featureEnabled) return;
+		const log = ctx.log;
+		const config = ctx.exampleConfig;
 
-		log.debug(`Track started: "${track.title}"`);
+		if (!config?.featureEnabled) return;
 
-		// ───────────────────────────────────────────────────────────────────────
-		// ACCESS QUEUE METADATA
-		// ───────────────────────────────────────────────────────────────────────
-		// Queue metadata contains the original message and other data
+		if (log) log.debug(`Track started: "${track.title}"`);
 
 		const metadata = queue.metadata;
-		if (metadata?.channel) {
-			log.debug(`Playing in channel: ${metadata.channel.name}`);
-		}
+		if (metadata?.channel && log) log.debug(`Playing in channel: ${metadata.channel.name}`);
 
-		// ───────────────────────────────────────────────────────────────────────
-		// INTER-FEATURE COMMUNICATION
-		// ───────────────────────────────────────────────────────────────────────
-		// Access other features' services through ctx.services
-
-		// Example: Log to music stats if available
-		if (ctx.db) {
+		if (ctx.db && log) {
 			log.debug(`Track URL: ${track.url}`);
 			log.debug(`Requested by: ${track.requestedBy?.username || "Unknown"}`);
 		}
 
-		// ───────────────────────────────────────────────────────────────────────
-		// EXAMPLE: LOG PLAYBACK TO CONSOLE
-		// ───────────────────────────────────────────────────────────────────────
-		// This is just for demonstration - real features would do more
-
-		if (config.verbose) {
+		if (config?.verbose && log) {
 			log.info(`Now playing: "${track.title}" by ${track.author}`);
 			log.info(`Duration: ${track.duration}`);
 			log.info(`Source: ${track.source}`);

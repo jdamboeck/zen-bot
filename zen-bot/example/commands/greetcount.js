@@ -9,10 +9,6 @@
  * @module zen-bot/example/commands/greetcount
  */
 
-const { createLogger } = require("../../core/logger");
-
-const log = createLogger("greetcount");
-
 module.exports = {
 	name: "greetcount",
 	aliases: ["gc"],

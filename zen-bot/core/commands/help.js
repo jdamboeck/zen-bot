@@ -4,20 +4,17 @@
  * @module zen-bot/core/commands/help
  */
 
-const { createLogger } = require("../logger");
-
-const log = createLogger("help");
-
 module.exports = {
 	name: "help",
 
 	/**
 	 * @param {import("discord.js").Message} message
 	 * @param {string[]} args
-	 * @param {object} ctx - Shared context (commands, config, enabledFeatures)
+	 * @param {object} ctx - Shared context (commands, config, enabledFeatures, log)
 	 */
 	async execute(message, args, ctx) {
-		log.debug(`Help command by ${message.author.username}`);
+		const log = ctx.log;
+		if (log) log.debug(`Help command by ${message.author.username}`);
 
 		const prefix = ctx.config?.prefix ?? "#";
 		const commands = ctx.commands;

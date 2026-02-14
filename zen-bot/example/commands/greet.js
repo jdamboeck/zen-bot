@@ -14,12 +14,6 @@
  * @module zen-bot/example/commands/greet
  */
 
-const { createLogger } = require("../../core/logger");
-
-// Create a logger for this command
-// Tip: Use a descriptive name that matches the command
-const log = createLogger("greet");
-
 module.exports = {
 	// ─────────────────────────────────────────────────────────────────────────
 	// COMMAND METADATA
@@ -61,18 +55,14 @@ module.exports = {
 	 * // args = ["@someone"]
 	 */
 	async execute(message, args, ctx) {
-		log.debug(`Greet command executed by ${message.author.username}`);
-		log.debug(`Arguments: ${args.length > 0 ? args.join(", ") : "(none)"}`);
-
-		// ───────────────────────────────────────────────────────────────────────
-		// ACCESS SERVICES
-		// ───────────────────────────────────────────────────────────────────────
-		// Services are available at ctx.services.[featureName]
+		const log = ctx.log;
+		if (log) log.debug(`Greet command executed by ${message.author.username}`);
+		if (log) log.debug(`Arguments: ${args.length > 0 ? args.join(", ") : "(none)"}`);
 
 		const { example } = ctx.services;
 
 		if (!example) {
-			log.error("Example services not available - feature may not be loaded");
+			if (log) log.error("Example services not available - feature may not be loaded");
 			return message.reply("Something went wrong. Please try again later.");
 		}
 
@@ -94,11 +84,11 @@ module.exports = {
 		// Use message.reply() to respond
 
 		if (!result.success) {
-			log.debug(`Greet failed: ${result.message}`);
+			if (log) log.debug(`Greet failed: ${result.message}`);
 			return message.reply(result.message);
 		}
 
-		log.info(`Greeted ${message.author.username}: "${result.message}"`);
+		if (log) log.info(`Greeted ${message.author.username}: "${result.message}"`);
 		return message.reply(result.message);
 	},
 };

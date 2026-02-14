@@ -4,10 +4,7 @@
  * @module zen-bot/music-comments/events/emptyQueue
  */
 
-const { createLogger } = require("../../core/logger");
 const services = require("../services");
-
-const log = createLogger("music-comments");
 
 module.exports = {
 	event: "emptyQueue",
@@ -15,12 +12,13 @@ module.exports = {
 
 	/**
 	 * @param {import("discord-player").GuildQueue} queue
-	 * @param {object} ctx
+	 * @param {object} ctx - Shared context (log)
 	 */
 	async handle(queue, ctx) {
+		const log = ctx.log;
 		const guildId = queue?.channel?.guild?.id;
 		if (guildId) {
-			log.debug("Empty queue: stopping comment tracking session (guild:", guildId, ")");
+			if (log) log.debug("Empty queue: stopping comment tracking session (guild:", guildId, ")");
 			services.stopTrackingSession(guildId);
 		}
 	},

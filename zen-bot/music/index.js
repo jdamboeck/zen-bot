@@ -7,20 +7,18 @@
 
 const { Player } = require("discord-player");
 const { DefaultExtractors } = require("@discord-player/extractor");
-const { createLogger } = require("../core/logger");
 const { get } = require("../core/config");
 const { YtDlpExtractor } = require("./extractor");
-const config = require("./config");
-
-const log = createLogger("music");
 
 /**
- * Create player, register YtDlpExtractor and default extractors, attach musicConfig to ctx.
+ * Create player, register YtDlpExtractor and default extractors.
+ * ctx.musicConfig is attached by loader from config.js.
  *
- * @param {object} ctx - Shared context (mutated: player, musicConfig)
+ * @param {object} ctx - Shared context (mutated: player)
  * @returns {Promise<void>}
  */
 async function init(ctx) {
+	const log = ctx.log;
 	log.info("Initializing music...");
 
 	// Initialize the Player with audio quality settings
@@ -41,9 +39,6 @@ async function init(ctx) {
 		ctx.player.extractors.store.map((e) => e.identifier)
 	);
 
-	// Store config for commands
-	ctx.musicConfig = config;
-
 	if (String(get("LOG_LEVEL", "debug")).toLowerCase() === "debug") {
 		const { startPotProviderLogTail } = require("./pot-provider-log-tail");
 		startPotProviderLogTail();
@@ -52,4 +47,4 @@ async function init(ctx) {
 	log.info("Music initialized");
 }
 
-module.exports = { init };
+module.exports = { init, dependsOn: ["core"] };

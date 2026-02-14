@@ -7,7 +7,7 @@
 
 const { createLogger } = require("../logger");
 
-const log = createLogger("soundboard");
+const defaultLog = createLogger("soundboard");
 
 /** How long to show the soundboard icon (ms) before switching to "now playing" text. */
 const SOUNDBOARD_ICON_DURATION_MS = 2000;
@@ -18,9 +18,11 @@ const SOUNDBOARD_ICON_DURATION_MS = 2000;
  *
  * @param {import("discord.js").Guild} guild
  * @param {import("discord.js").VoiceChannel} voiceChannel
+ * @param {object} [optLog] - Optional logger (e.g. ctx.log)
  * @returns {Promise<void>}
  */
-async function tryPlaySoundboardSlot1(guild, voiceChannel) {
+async function tryPlaySoundboardSlot1(guild, voiceChannel, optLog) {
+	const log = optLog || defaultLog;
 	const hasGuild = !!guild?.soundboardSounds;
 	const hasSend = typeof voiceChannel?.sendSoundboardSound === "function";
 	log.debug("tryPlaySoundboardSlot1 called", {
@@ -46,7 +48,7 @@ async function tryPlaySoundboardSlot1(guild, voiceChannel) {
 		await voiceChannel.sendSoundboardSound(payload);
 		log.debug("Sent soundboard sound successfully");
 	} catch (e) {
-		log.warn("Error:", e.message || e);
+		log.warn("Soundboard error:", e.message || e);
 	}
 }
 
