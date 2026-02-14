@@ -43,6 +43,11 @@ async function init(ctx) {
 	// Store config for commands
 	ctx.musicConfig = config;
 
+	if (process.env.LOG_LEVEL?.toLowerCase() === "debug") {
+		const { startPotProviderLogTail } = require("./pot-provider-log-tail");
+		startPotProviderLogTail();
+	}
+
 	log.info("Music initialized");
 }
 

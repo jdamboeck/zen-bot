@@ -54,7 +54,7 @@ const SEP = " [ ";
 const SEP_BEFORE_MSG = " [";
 
 /** Fixed character width for service name (padding/truncation). Always 12 so all lines align from the first log. */
-const SERVICE_NAME_WIDTH = 12;
+const SERVICE_NAME_WIDTH = 10;
 
 /**
  * Format service name to fixed width: name, space, then dots to fill (or truncate). Total length = SERVICE_NAME_WIDTH (12).

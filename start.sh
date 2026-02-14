@@ -2,7 +2,9 @@
 
 echo "Starting BgUtil PO Token Provider Server..."
 cd third_party/bgutil-ytdlp-pot-provider/server
-node build/main.js &
+mkdir -p ../../../third_party/logs
+: > ../../../third_party/logs/pot-provider.log
+node build/main.js >> ../../../third_party/logs/pot-provider.log 2>&1 &
 PO_PROVIDER_PID=$!
 cd ../../..
 
